@@ -1,0 +1,190 @@
+@model ProfessorTaskSubmissionsViewModel
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = T.T("Task Submissions");
+    var task = Model.Task;
+    var submissions = Model.Submissions ?? new List<RealTimeCollaborationSystem.Models.TaskSubmission>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tasks.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead topics-head task-submissions-head">
+    <div>
+        <p class="dashboard-kicker">@T.T("Professor")</p>
+        <h2>@task.Title</h2>
+        <p class="dashboard-lead">
+            @T.T("Review submitted files, comments, and save feedback for {0}."), task.TopicBatch?.Title ?? @T.T("this task")
+        </p>
+    </div>
+    <!-- Removed in-header back button; it will be placed below with the Topics-style button -->
+</section>
+
+<section class="topics-actions topics-actions--navigation">
+    <a class="dashboard-card__button topics-back-button" asp-action="Index" aria-label="Back to Tasks">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 18 9 12l6-6"></path>        
+        </svg>
+        <span>@T.T("Back to Tasks")</span>
+    </a>
+</section>
+
+@if (TempData["TaskFeedbackSuccess"] is string successMessage)
+{
+    <div class="task-alert task-alert--success">@successMessage</div>
+}
+
+@if (TempData["TaskFeedbackError"] is string errorMessage)
+{
+    <div class="task-alert task-alert--error">@errorMessage</div>
+}
+
+<section class="topics-card">
+    <div class="topics-card__head">
+        <div>
+            <p class="dashboard-kicker">@T.T("Submissions")</p>
+            <h3>@T.T("Student work")</h3>
+            <p class="topics-card__text">@T.T("Feedback marks a submission as reviewed.")</p>
+        </div>
+        <span class="topics-badge topics-badge--published">@submissions.Count @(submissions.Count == 1 ? T.T("Submission") : T.T("Submissions"))</span>
+    </div>
+
+    @if (!submissions.Any())
+    {
+        <div class="topics-empty">
+            <h4>@T.T("No submissions yet")</h4>
+            <p>@T.T("Student submissions for this task will appear here.")</p>
+        </div>
+    }
+    else
+    {
+        <div class="task-submission-list">
+            @foreach (var submission in submissions)
+            {
+                var feedbackModalId = $"feedbackModal-{submission.Id}";
+                var isReviewed = string.Equals(submission.Status, "Reviewed", StringComparison.OrdinalIgnoreCase);
+
+                <article class="task-submission-card task-submission-card--review">
+                    <div class="task-submission-panel task-submission-panel--details">
+                        <div class="task-submission-student">
+                            <div>
+                                <span class="task-submission-label">@T.T("Student")</span>
+                                <strong>@(string.IsNullOrWhiteSpace(submission.Student?.Name) ? T.T("Student") : submission.Student.Name)</strong>
+                                <span class="task-muted">@submission.Student?.Email</span>
+                            </div>
+                            <span class="task-status task-status--@submission.Status.ToLowerInvariant()">@submission.Status</span>
+                        </div>
+
+                        <div class="task-submission-meta-grid">
+                            <div>
+                                <span>@T.T("Submitted")</span>
+                                <strong>@submission.SubmittedAt.ToString("yyyy-MM-dd HH:mm")</strong>
+                            </div>
+                            <div>
+                                <span>@T.T("File name")</span>
+                                <strong>@submission.FileName</strong>
+                            </div>
+                        </div>
+
+                        <div class="task-submission-file-card">
+                            <div>
+                                <span>@T.T("Submitted file")</span>
+                                <strong>@submission.FileName</strong>
+                            </div>
+                            <div class="task-file-actions">
+                                <a class="dashboard-card__button task-file-button" href="@submission.FilePath" target="_blank" rel="noopener">@T.T("View File")</a>
+                                <a class="dashboard-card__button dashboard-card__button--primary task-file-button" href="@submission.FilePath" download="@submission.FileName">@T.T("Download")</a>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(submission.StudentComment))
+                        {
+                            <div class="task-submission-card__comment">
+                                <span>@T.T("Student note")</span>
+                                <p>@submission.StudentComment</p>
+                            </div>
+                        }
+                    </div>
+
+                    <aside class="task-submission-panel task-submission-panel--feedback @(isReviewed ? "task-submission-panel--reviewed" : "")">
+                        <div class="task-feedback-summary__head">
+                            <div>
+                                <span>@T.T("Feedback")</span>
+                                <strong>@(isReviewed ? "Reviewed" : "Needs review")</strong>
+                            </div>
+                            @if (submission.Grade.HasValue)
+                            {
+                                <span class="task-grade-badge">@T.T("Grade") @submission.Grade.Value.ToString("0.##")</span>
+                            }
+                        </div>
+
+                        @if (isReviewed)
+                        {
+                            <p class="task-feedback-text">@(string.IsNullOrWhiteSpace(submission.Feedback) ? @T.T("Reviewed without written feedback.") : submission.Feedback)</p>
+                        }
+                        else
+                        {
+                            <p class="task-feedback-text">@T.T("No feedback yet.")</p>
+                        }
+
+                        <div class="task-card__actions task-card__actions--compact task-feedback-actions">
+                            <button type="button" class="dashboard-card__button dashboard-card__button--primary" data-bs-toggle="modal" data-bs-target="#@feedbackModalId">
+                                @(isReviewed ? @T.T("Edit feedback") : @T.T("Add feedback"))
+                            </button>
+                            @if (isReviewed)
+                            {
+                                <form asp-action="DeleteFeedback" asp-route-id="@submission.Id" method="post"
+                                      data-delete-confirm
+                                      data-delete-title="@T.T("Delete feedback?")"
+                                      data-delete-item="@(string.IsNullOrWhiteSpace(submission.Student?.Name) ? submission.Student?.Email : submission.Student.Name)"
+                                      data-delete-message="@T.T("This feedback will be permanently deleted and the submission will return to Submitted status.")">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dashboard-card__button task-delete-button">@T.T("Delete feedback")</button>
+                                </form>
+                            }
+                        </div>
+                    </aside>
+                </article>
+
+                <div class="modal fade task-modal" id="@feedbackModalId" tabindex="-1" aria-labelledby="@($"{feedbackModalId}Title")" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form asp-action="SaveFeedback" asp-route-id="@submission.Id" method="post">
+                                @Html.AntiForgeryToken()
+
+                                <div class="modal-header">
+                                    <div>
+                                        <p class="dashboard-kicker">@T.T("Feedback")</p>
+                                        <h3 class="modal-title" id="@($"{feedbackModalId}Title")">@T.T("Review submission")</h3>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body task-modal__body">
+                                    <div class="topics-field">
+                                        <label for="@($"feedback-{submission.Id}")">@T.T("Feedback")</label>
+                                        <textarea id="@($"feedback-{submission.Id}")" name="feedback" rows="4" maxlength="1000" placeholder="@T.T("Write clear feedback")">@submission.Feedback</textarea>
+                                    </div>
+
+                                    <div class="topics-field">
+                                        <label for="@($"grade-{submission.Id}")">@T.T("Grade optional")</label>
+                                        <input id="@($"grade-{submission.Id}")" name="grade" type="number" min="0" step="0.01" value="@submission.Grade" />
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer task-modal__footer">
+                                    <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                                    <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Save feedback")</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

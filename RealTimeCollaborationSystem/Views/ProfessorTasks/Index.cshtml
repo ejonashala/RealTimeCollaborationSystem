@@ -1,0 +1,246 @@
+@model ProfessorTasksIndexViewModel
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = @T.T("Manage Tasks");
+    var tasks = Model.Tasks ?? new List<RealTimeCollaborationSystem.Models.CourseTask>();
+    var groups = Model.Groups ?? new List<RealTimeCollaborationSystem.Models.TopicBatch>();
+    var groupedTasks = tasks
+        .GroupBy(task => task.TopicBatch?.Title ?? @T.T("Unassigned"))
+        .OrderBy(group => group.Key == T.T("Unassigned") ? 1 : 0)
+        .ThenBy(group => group.Key)
+        .ToList();
+    var search = ViewBag.Search as string ?? string.Empty;
+    var status = ViewBag.Status as string ?? string.Empty;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tasks.css" asp-append-version="true" />
+}
+
+@if (TempData["TaskSuccess"] is string successMessage)
+{
+    <div class="task-alert task-alert--success">@successMessage</div>
+}
+
+@if (TempData["TaskError"] is string errorMessage)
+{
+    <div class="task-alert task-alert--error">@errorMessage</div>
+}
+
+<section class="topics-card">
+    <div class="topics-card__head">
+        <div>
+            <p class="dashboard-kicker">@T.T("Tasks")</p>
+            <h3>@T.T("Task inventory")</h3>
+            <p class="topics-card__text">@T.T("Create tasks here, then use this table for management.")</p>
+        </div>
+        <button type="button" class="dashboard-card__button dashboard-card__button--primary topics-create-button" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+            @T.T("Create Task")
+        </button>
+    </div>
+
+    <form class="management-toolbar" method="get">
+        <div class="topics-field">
+            <label for="taskSearch">@T.T("Search")</label>
+            <input id="taskSearch" name="search" value="@search" placeholder="@T.T("Search title or description")" />
+        </div>
+        <div class="topics-field">
+            <label for="taskStatus">@T.T("Status")</label>
+            <select id="taskStatus" name="status">
+                <option value="">@T.T("All statuses")</option>
+                <option value="Active" selected="@(status == "Active")">@T.T("Active")</option>
+                <option value="Completed" selected="@(status == "Completed")">@T.T("Completed")</option>
+            </select>
+        </div>
+        <div class="management-toolbar__actions">
+            <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Apply")</button>
+            <a class="dashboard-card__button" asp-action="Index">@T.T("Reset")</a>
+        </div>
+    </form>
+
+    @if (!tasks.Any())
+    {
+        <div class="topics-empty">
+            <h4>@T.T("No tasks found")</h4>
+            <p>@T.T("Adjust the filters or create a task from the Tasks section.")</p>
+        </div>
+    }
+    else
+    {
+        <div class="topics-table-wrap">
+            <table class="topics-table management-table">
+                <thead>
+                    <tr>
+                        <th>@T.T("Task")</th>
+                        <th>@T.T("Deadline")</th>
+                        <th>@T.T("Submissions")</th>
+                        <th>@T.T("Status")</th>
+                        <th>@T.T("Actions")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var taskGroup in groupedTasks)
+                    {
+                        <tr>
+                            <td colspan="5" class="task-group-row">
+                                <span>@T.T("Group")</span>
+                                <strong>@taskGroup.Key</strong>
+                            </td>
+                        </tr>
+
+                        @foreach (var task in taskGroup)
+                        {
+                            var completionState = Model.CompletionStates.GetValueOrDefault(task.Id)
+                                ?? new RealTimeCollaborationSystem.ViewModels.ProfessorTaskCompletionState
+                                {
+                                    TotalSubmissions = task.Submissions.Count
+                                };
+                            var isCompleted = completionState.IsComplete;
+                            var statusText = isCompleted ? @T.T("Completed") :@T.T("Active");
+                            var statusClass = isCompleted ? T.T("completed") : @T.T("active");
+                            var editModalId = $"editTaskModal-{task.Id}";
+
+                            <tr>
+                                <td>
+                                    <strong class="management-title">@task.Title</strong>
+                                    <span class="management-muted">@task.Description</span>
+                                </td>
+                                <td>@task.Deadline.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@completionState.ProgressText</td>
+                                <td><span class="task-status task-status--@statusClass">@statusText</span></td>
+                                <td class="topics-table__actions">
+                                    <div class="management-row-actions">
+                                        <a class="dashboard-card__button" asp-action="Submissions" asp-route-id="@task.Id">@T.T("Manage")</a>
+                                        <button type="button" class="dashboard-card__button" data-bs-toggle="modal" data-bs-target="#@editModalId">@T.T("Edit")</button>
+                                        <form asp-action="Delete" asp-route-id="@task.Id" method="post"
+                                              data-delete-confirm
+                                              data-delete-title="@T.T("Delete task?")"
+                                              data-delete-item="@task.Title"
+                                              data-delete-message="@T.T("This task and its submissions will be permanently deleted. This action cannot be undone.")">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dashboard-card__button task-delete-button">@T.T("Delete")</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <div class="modal fade task-modal" id="@editModalId" tabindex="-1" aria-labelledby="@($"{editModalId}Title")" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <form asp-action="Edit" asp-route-id="@task.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="MeetingLink" value="@task.MeetingLink" />
+
+                                            <div class="modal-header">
+                                                <div>
+                                                    <p class="dashboard-kicker">@T.T("Task")</p>
+                                                    <h3 class="modal-title" id="@($"{editModalId}Title")">@T.T("Edit Task")</h3>
+                                                </div>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body task-modal__body">
+                                                <div class="topics-field">
+                                                    <label for="@($"taskGroup-{task.Id}")">@T.T("Group")</label>
+                                                    <select id="@($"taskGroup-{task.Id}")" name="TopicBatchId" required>
+                                                        <option value="">@T.T("Choose group")</option>
+                                                        @foreach (var groupOption in groups)
+                                                        {
+                                                            <option value="@groupOption.Id" selected="@(task.TopicBatchId == groupOption.Id)">@groupOption.Title</option>
+                                                        }
+                                                    </select>
+                                                </div>
+
+                                                <div class="topics-field">
+                                                    <label for="@($"taskTitle-{task.Id}")">@T.T("Title")</label>
+                                                    <input id="@($"taskTitle-{task.Id}")" name="Title" maxlength="200" value="@task.Title" required />
+                                                </div>
+
+                                                <div class="topics-field">
+                                                    <label for="@($"taskDescription-{task.Id}")">@T.T("Description")</label>
+                                                    <textarea id="@($"taskDescription-{task.Id}")" name="Description" rows="4" maxlength="1000" required>@task.Description</textarea>
+                                                </div>
+
+                                                <div class="topics-field">
+                                                    <label for="@($"taskDeadline-{task.Id}")">@T.T("Deadline")</label>
+                                                    <input id="@($"taskDeadline-{task.Id}")" name="Deadline" type="datetime-local" value="@task.Deadline.ToString("yyyy-MM-ddTHH:mm")" required />
+                                                </div>
+
+                                            </div>
+
+                                            <div class="modal-footer task-modal__footer">
+                                                <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                                                <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Save")</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<div class="modal fade task-modal create-modal" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <div>
+                        <p class="dashboard-kicker">@T.T("Task")</p>
+                        <h3 class="modal-title" id="createTaskModalTitle">@T.T("Create Task")</h3>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body task-modal__body">
+                    <div class="topics-field">
+                        <label for="createTaskGroup">@T.T("Group")</label>
+                        <select id="createTaskGroup" name="TopicBatchId" required>
+                            <option value="">@T.T("Choose group")</option>
+                            @foreach (var groupOption in groups)
+                            {
+                                <option value="@groupOption.Id">@groupOption.Title</option>
+                            }
+                        </select>
+                        <span class="topics-help">@T.T("Tasks are assigned to students who belong to this group.")</span>
+                    </div>
+
+                    <div class="topics-field">
+                        <label for="createTaskTitle">@T.T("Title")</label>
+                        <input id="createTaskTitle" name="Title" maxlength="200" required />
+                    </div>
+
+                    <div class="topics-field">
+                        <label for="createTaskDescription">@T.T("Description")</label>
+                        <textarea id="createTaskDescription" name="Description" rows="5" maxlength="1000" required></textarea>
+                    </div>
+
+                    <div class="topics-field">
+                        <label for="createTaskDeadline">@T.T("Deadline")</label>
+                        <input id="createTaskDeadline" name="Deadline" type="datetime-local" required />
+                    </div>
+
+                    <div class="topics-field">
+                        <label for="createTaskAttachment">@T.T("Optional file")</label>
+                        <input id="createTaskAttachment" name="attachment" type="file" accept=".pdf,.docx,.zip,.png,.jpg,.jpeg" />
+                        <span class="topics-help">@T.T("Supported files: PDF, DOCX, ZIP, PNG, JPG.")</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer task-modal__footer">
+                    <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                    <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Create Task")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,22 @@
+@model SettingsViewModel
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    Layout = "_DashboardLayout";
+    ViewData["Title"] = @T.T("Settings");
+    ViewData["SettingsName"] = Model.Name;
+    ViewData["SettingsEmail"] = Model.Email;
+    ViewData["SettingsRole"] = Model.Role;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/settings.css" asp-append-version="true" />
+}
+
+<partial name="_SettingsSections" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/settings-page.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,251 @@
+@model IEnumerable<RealTimeCollaborationSystem.Models.TopicBatch>
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = @T.T("Manage Topics");
+    var batches = Model?.ToList() ?? new List<RealTimeCollaborationSystem.Models.TopicBatch>();
+    var search = ViewBag.Search as string ?? string.Empty;
+    var status = ViewBag.Status as string ?? string.Empty;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tasks.css" asp-append-version="true" />
+}
+
+@if (TempData["ProjectError"] is string projectError)
+{
+    <div class="topic-selection-message is-visible">@projectError</div>
+}
+
+<section class="topics-card">
+    <div class="topics-card__head">
+        <div>
+            <p class="dashboard-kicker">@T.T("Topic Batches")</p>
+            <h3>@T.T("Your topic inventory")</h3>
+            <p class="topics-card__text">@T.T("Create topic lists here, then manage existing batches in the table.")</p>
+        </div>
+        <button type="button" class="dashboard-card__button dashboard-card__button--primary topics-create-button" data-bs-toggle="modal" data-bs-target="#createTopicBatchModal">
+            @T.T("Create Batch")
+        </button>
+    </div>
+
+    <form class="management-toolbar" method="get">
+        <div class="topics-field">
+            <label for="topicSearch">@T.T("Search")</label>
+            <input id="topicSearch" name="search" value="@search" placeholder="@T.T("Search batch or topic title")" />
+        </div>
+        <div class="topics-field">
+            <label for="topicStatus">@T.T("Status")</label>
+            <select id="topicStatus" name="status">
+                <option value="">@T.T("All statuses")</option>
+                <option value="Active" selected="@(status == "Active")">@T.T("Active")</option>
+                <option value="Draft" selected="@(status == "Draft" || status == "Pending")">@T.T("Draft")</option>
+            </select>
+        </div>
+        <div class="management-toolbar__actions">
+            <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Apply")</button>
+            <a class="dashboard-card__button" asp-action="Index">@T.T("Reset")</a>
+        </div>
+    </form>
+
+    @if (!batches.Any())
+    {
+        <div class="topics-empty">
+            <h4>@T.T("No topic batches found")</h4>
+            <p>@T.T("Adjust the filters or create a new topic list from the Topics section.")</p>
+        </div>
+    }
+    else
+    {
+        <div class="topics-table-wrap">
+            <table class="topics-table management-table">
+                <thead>
+                    <tr>
+                        <th>@T.T("Topic batch")</th>
+                        <th>@T.T("Professor")</th>
+                        <th>@T.T("Topics")</th>
+                        <th>@T.T("Status")</th>
+                        <th>@T.T("Actions")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var batch in batches)
+                    {
+                        var topics = batch.Topics?.ToList() ?? new List<RealTimeCollaborationSystem.Models.Topic>();
+                        var takenTopics = topics.Count(topic =>
+                            topic.ReservedByStudentId.HasValue
+                            || string.Equals(topic.Status, "Taken", StringComparison.OrdinalIgnoreCase));
+                        var availableTopics = topics.Count - takenTopics;
+                        var editModalId = $"editTopicBatchModal-{batch.Id}";
+                        var activateModalId = $"activateTopicBatchModal-{batch.Id}";
+
+                        <tr>
+                            <td>
+                                <strong class="management-title">@batch.Title</strong>
+                                <span class="management-muted">Created @batch.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(batch.CreatedByProfessor?.Name) ? @T.T("Professor") : batch.CreatedByProfessor.Name)</td>
+                            <td>
+                                <div class="topic-summary-counts" aria-label="Topic summary">
+                                    <span><strong>@topics.Count</strong> @T.T("total")</span>
+                                    <span><strong>@availableTopics</strong> @T.T("available")</span>
+                                    <span><strong>@takenTopics</strong> @T.T("taken")</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="topics-badge @(batch.IsPublished ? "topics-badge--active" : "topics-badge--draft")">
+                                    @(batch.IsPublished ? @T.T("Active") : @T.T("Draft"))
+                                </span>
+                            </td>
+                            <td class="topics-table__actions">
+                                <div class="management-row-actions">
+                                    <a class="dashboard-card__button" asp-action="BatchTopics" asp-route-id="@batch.Id">@T.T("Manage")</a>
+                                    @if (!batch.IsPublished)
+                                    {
+                                        <button type="button" class="dashboard-card__button dashboard-card__button--primary" data-bs-toggle="modal" data-bs-target="#@activateModalId">@T.T("Activate")</button>
+                                    }
+                                    <button type="button" class="dashboard-card__button" data-bs-toggle="modal" data-bs-target="#@editModalId">@T.T("Edit")</button>
+                                    <form asp-action="DeleteBatch" asp-route-id="@batch.Id" method="post"
+                                          data-delete-confirm
+                                          data-delete-title="@T.T("Delete topic batch?")"
+                                          data-delete-item="@batch.Title"
+                                          data-delete-message="@T.T("This topic batch and its topics will be permanently deleted. This action cannot be undone.")">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dashboard-card__button topic-delete-button">@T.T("Delete")</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade task-modal" id="@editModalId" tabindex="-1" aria-labelledby="@($"{editModalId}Title")" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <form asp-action="EditBatch" asp-route-id="@batch.Id" method="post">
+                                        @Html.AntiForgeryToken()
+
+                                        <div class="modal-header">
+                                            <div>
+                                                <p class="dashboard-kicker">@T.T("Topic batch")</p>
+                                                <h3 class="modal-title" id="@($"{editModalId}Title")">@T.T("Edit Topic Batch")</h3>
+                                            </div>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body task-modal__body">
+                                            <div class="topics-field">
+                                                <label for="@($"topicBatchTitle-{batch.Id}")">@T.T("Title")</label>
+                                                <input id="@($"topicBatchTitle-{batch.Id}")" name="title" value="@batch.Title" maxlength="200" required />
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer task-modal__footer">
+                                            <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                                            <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Save")</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (!batch.IsPublished)
+                        {
+                            <div class="modal fade task-modal activate-batch-modal" id="@activateModalId" tabindex="-1" aria-labelledby="@($"{activateModalId}Title")" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <form asp-action="ActivateBatch" asp-route-id="@batch.Id" method="post">
+                                            @Html.AntiForgeryToken()
+
+                                            <div class="modal-header">
+                                                <div>
+                                                    <p class="dashboard-kicker">@T.T("Activate Batch")</p>
+                                                    <h3 class="modal-title" id="@($"{activateModalId}Title")">@T.T("Make this batch visible?")</h3>
+                                                </div>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body task-modal__body">
+                                                <div class="activate-batch-modal__message">
+                                                    <strong>@batch.Title</strong>
+                                                    <p>@T.T("Students will be able to view this batch and select available topics after activation.")</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer task-modal__footer">
+                                                <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                                                <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Activate Batch")</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<div class="modal fade task-modal create-modal topic-create-modal" id="createTopicBatchModal" tabindex="-1" aria-labelledby="createTopicBatchModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="CreateBatch" method="post" enctype="multipart/form-data" data-topic-upload-form>
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <div>
+                        <p class="dashboard-kicker">@T.T("Topics")</p>
+                        <h3 class="modal-title" id="createTopicBatchModalTitle">@T.T("Create Batch")</h3>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body topic-create-modal__body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="topics-field">
+                        <label for="createTopicBatchTitle">@T.T("Topic batch title")</label>
+                        <input id="createTopicBatchTitle" name="Title" maxlength="200" data-topic-batch-title required />
+                    </div>
+
+                    <div class="topics-field">
+                        <label for="createTopicsText">@T.T("Topics")</label>
+                        <textarea id="createTopicsText" name="topicsText" rows="8" data-topic-lines required></textarea>
+                        <span class="topics-help">@T.T("Write one topic per line. New batches start as Draft and stay hidden from students until activated.")</span>
+                        <p class="topics-error" data-topic-lines-error aria-live="polite"></p>
+                    </div>
+                </div>
+
+                <div class="modal-footer task-modal__footer">
+                    <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                    <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Create Batch")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<aside class="topic-preview-panel" data-topic-preview-panel aria-live="polite" aria-hidden="true">
+    <div class="topic-preview-panel__dialog">
+        <div class="topics-card__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Preview")</p>
+                <h3>@T.T("Review before saving")</h3>
+                <p class="topics-card__text" data-topic-preview-count>@T.T("No topics yet")</p>
+            </div>
+        </div>
+
+        <div class="topics-empty topics-preview__empty" data-topic-preview-empty>
+            <h4>@T.T("No topics to preview")</h4>
+            <p>@T.T("Paste topics into the create modal to see them here.")</p>
+        </div>
+
+        <ol class="topics-preview__list" data-topic-preview-list></ol>
+    </div>
+</aside>
+
+@section Scripts {
+    <script src="~/js/professor-topic-upload.js" asp-append-version="true"></script>
+}

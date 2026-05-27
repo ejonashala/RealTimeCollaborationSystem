@@ -1,0 +1,170 @@
+@model StudentTaskDetailsViewModel
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = Model.Task.Title;
+    var task = Model.Task;
+    var submission = Model.Submission;
+    var isPastDeadline = task.Deadline < DateTime.UtcNow;
+    var statusText = submission != null ? @T.T("Submitted") : isPastDeadline ? @T.T("Deadline Passed") : @T.T("Active");
+    var statusClass = submission != null ? @T.T("submitted") : isPastDeadline ? @T.T("deadline-passed") : @T.T("active");
+    var isReviewed = string.Equals(submission?.Status, @T.T("Reviewed"), StringComparison.OrdinalIgnoreCase);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tasks.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead topics-head">
+    <div>
+        <p class="dashboard-kicker">@T.T("Student Task")</p>
+        <h2>@task.Title</h2>
+        <p class="dashboard-lead">
+            @T.T("Review the task details and submit your completed work when it is ready.")
+        </p>
+    </div>
+    <a class="dashboard-card__button" asp-action="Index">@T.T("Back to tasks")</a>
+</section>
+
+@if (TempData["TaskSubmissionSuccess"] is string successMessage)
+{
+    <div class="task-alert task-alert--success">@successMessage</div>
+}
+
+@if (TempData["TaskSubmissionError"] is string errorMessage)
+{
+    <div class="task-alert task-alert--error">@errorMessage</div>
+}
+
+<section class="task-detail-grid">
+    <article class="topics-card task-detail-card">
+        <div class="topics-card__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Task Details")</p>
+                <h3>@task.Title</h3>
+            </div>
+            <span class="task-status task-status--@statusClass">@statusText</span>
+        </div>
+
+        <p class="topic-card__description">@task.Description</p>
+
+        <div class="task-detail-meta">
+            <div>
+                <span>@T.T("Professor")</span>
+                <strong>@(string.IsNullOrWhiteSpace(task.Professor?.Name) ? @T.T("Professor") : task.Professor.Name)</strong>
+            </div>
+            <div>
+                <span>@T.T("Group")</span>
+                <strong>@(task.TopicBatch?.Title ?? @T.T("Group"))</strong>
+            </div>
+            <div>
+                <span>@T.T("Deadline")</span>
+                <strong>@task.Deadline.ToString("yyyy-MM-dd HH:mm")</strong>
+            </div>
+        </div>
+
+        <div class="task-detail-actions">
+            @if (!string.IsNullOrWhiteSpace(task.MeetingLink))
+            {
+                <a class="dashboard-card__button dashboard-card__button--primary" href="@task.MeetingLink" target="_blank" rel="noopener">
+                    @T.T("Open guidance link")
+                </a>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(task.AttachmentPath))
+            {
+                <a class="dashboard-card__button" href="@task.AttachmentPath" download="@task.AttachmentFileName">
+                    @T.T("Download task file")
+                </a>
+            }
+        </div>
+    </article>
+
+    <article class="topics-card task-detail-card">
+        <div class="topics-card__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Submission")</p>
+                <h3>@T.T("Your work")</h3>
+            </div>
+            <span class="task-status task-status--@statusClass">@statusText</span>
+        </div>
+
+        @if (submission != null)
+        {
+            <div class="task-submission-summary">
+                <div>
+                    <span>@T.T("Submitted")</span>
+                    <strong>@submission.SubmittedAt.ToString("yyyy-MM-dd HH:mm")</strong>
+                </div>
+                <div>
+                    <span>@T.T("File")</span>
+                    <a class="task-link" href="@submission.FilePath" target="_blank" rel="noopener">@submission.FileName</a>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(submission.StudentComment))
+                {
+                    <div>
+                        <span>@T.T("Comment")</span>
+                        <p>@submission.StudentComment</p>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(submission.Feedback) || submission.Grade.HasValue)
+                {
+                    <div class="task-feedback-note @(isReviewed ? "task-feedback-note--reviewed" : "")">
+                        <span>@T.T("Professor feedback")</span>
+                        @if (!string.IsNullOrWhiteSpace(submission.Feedback))
+                        {
+                            <p>@submission.Feedback</p>
+                        }
+                        @if (submission.Grade.HasValue)
+                        {
+                            <strong>@T.T("Grade:") @submission.Grade.Value.ToString("0.##")</strong>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        @if (isPastDeadline)
+        {
+            <div class="task-closed-panel">
+                <strong>@T.T("Deadline passed")</strong>
+                <p>@T.T("Submissions and changes are closed for this task.")</p>
+            </div>
+        }
+        else
+        {
+            <form class="task-submit-form" asp-action="Submit" asp-route-taskId="@task.Id" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <div class="topics-field">
+                    <label for="submissionFile">@(submission == null ? T.T("Completed work file") : T.T("Upload improved file"))</label>
+                    <input id="submissionFile" name="submissionFile" type="file" accept=".pdf,.docx,.zip,.png,.jpg,.jpeg" required />
+                    <span class="topics-help">@T.T("Supported files: PDF, DOCX, ZIP, PNG, JPG.")</span>
+                </div>
+
+                <div class="topics-field">
+                    <label for="studentComment">@T.T("Comment optional")</label>
+                    <textarea id="studentComment" name="studentComment" rows="4" maxlength="1000" placeholder="@T.T("Add a short note for the professor")"></textarea>
+                </div>
+
+                <button type="submit" class="dashboard-card__button dashboard-card__button--primary">
+                    @(submission == null ? T.T("Submit Work") : T.T("Update Submission"))
+                </button>
+            </form>
+
+            @if (submission != null)
+            {
+                <form asp-action="DeleteSubmission" asp-route-id="@submission.Id" method="post"
+                      data-delete-confirm
+                      data-delete-title="@T.T("Delete submission?")"
+                      data-delete-item="@submission.FileName"
+                      data-delete-message="@T.T("This submission will be permanently deleted. This action cannot be undone.")">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="dashboard-card__button task-delete-button">@T.T("Delete submission")</button>
+                </form>
+            }
+        }
+    </article>
+</section>

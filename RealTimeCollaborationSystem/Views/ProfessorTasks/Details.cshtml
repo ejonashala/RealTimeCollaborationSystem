@@ -1,0 +1,81 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+@model RealTimeCollaborationSystem.Models.CourseTask
+
+@{
+    ViewData["Title"] = Model.Title;
+    var completionState = ViewBag.CompletionState as RealTimeCollaborationSystem.ViewModels.ProfessorTaskCompletionState
+        ?? new RealTimeCollaborationSystem.ViewModels.ProfessorTaskCompletionState
+        {
+            TotalSubmissions = Model.Submissions.Count
+        };
+    var isCompleted = completionState.IsComplete;
+    var statusText = isCompleted ? @T.T("Completed") : @T.T("Active");
+    var statusClass = isCompleted ? @T.T("completed") : @T.T("active");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tasks.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead topics-head">
+    <div>
+        <p class="dashboard-kicker">@T.T("Task")</p>
+        <h2>@Model.Title</h2>
+        <p class="dashboard-lead">@T.T("Read-only task details and management context.")</p>
+    </div>
+    <a class="dashboard-card__button" asp-action="Index">@T.T("Back to Manage Tasks")</a>
+</section>
+
+<section class="task-detail-grid">
+    <article class="topics-card task-detail-card">
+        <div class="topics-card__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Details")</p>
+                <h3>@Model.Title</h3>
+            </div>
+            <span class="task-status task-status--@statusClass">@statusText</span>
+        </div>
+
+        <p class="topic-card__description">@Model.Description</p>
+
+        <div class="task-detail-meta">
+            <div>
+                <span>@T.T("Group")</span>
+                <strong>@(Model.TopicBatch?.Title ?? T.T("Unassigned"))</strong>
+            </div>
+            <div>
+                <span>@T.T("Deadline")</span>
+                <strong>@Model.Deadline.ToString("yyyy-MM-dd HH:mm")</strong>
+            </div>
+            <div>
+                <span>@T.T("Submissions")</span>
+                <strong>@completionState.ProgressText</strong>
+            </div>
+        </div>
+
+        <div class="task-detail-actions">
+            @if (!string.IsNullOrWhiteSpace(Model.AttachmentPath))
+            {
+                <a class="dashboard-card__button" href="@Model.AttachmentPath" download="@Model.AttachmentFileName">@T.T("Download task file")</a>
+            }
+        </div>
+    </article>
+
+    <article class="topics-card task-detail-card">
+        <div class="topics-card__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Review")</p>
+                <h3>@T.T("Student submissions")</h3>
+            </div>
+        </div>
+
+        <div class="topics-empty">
+            <h4>@completionState.ProgressText @T.T("submissions")</h4>
+            <p>@T.T("Open the submissions page to review files and feedback.")</p>
+        </div>
+
+        <a class="dashboard-card__button dashboard-card__button--primary" asp-action="Submissions" asp-route-id="@Model.Id">@T.T("View Submissions")</a>
+    </article>
+</section>

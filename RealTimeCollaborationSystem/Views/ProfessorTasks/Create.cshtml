@@ -1,0 +1,102 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+@model CreateCourseTaskViewModel
+
+@{
+    ViewData["Title"] = "Create Task";
+    var groups = ViewBag.Groups as List<RealTimeCollaborationSystem.Models.TopicBatch>
+        ?? new List<RealTimeCollaborationSystem.Models.TopicBatch>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tasks.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead topics-head">
+    <div>
+        <p class="dashboard-kicker">@T.T("Professor")</p>
+        <h2>@T.T("Create Task")</h2>
+        <p class="dashboard-lead">@T.T("Use this dedicated form to create a new assignment for students.")</p>
+    </div>
+</section>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="topics-upload">
+    @Html.AntiForgeryToken()
+
+    <section class="topics-upload__form topics-card">
+        <div class="topics-card__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Task")</p>
+                <h3>@T.T("Task details")</h3>
+                <p class="topics-card__text">@T.T("Add the assignment instructions, deadline, and optional resources.")</p>
+            </div>
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="topics-field">
+            <label asp-for="TopicBatchId">@T.T("Group")</label>
+            <select asp-for="TopicBatchId">
+                <option value="">@T.T("Choose group")</option>
+                @foreach (var groupOption in groups)
+                {
+                    <option value="@groupOption.Id">@groupOption.Title</option>
+                }
+            </select>
+            <span class="topics-help">@T.T("Tasks are assigned to students who belong to this group.")</span>
+            <span asp-validation-for="TopicBatchId" class="text-danger"></span>
+        </div>
+
+        <div class="topics-field">
+            <label asp-for="Title">@T.T("Title")</label>
+            <input asp-for="Title" maxlength="200" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="topics-field">
+            <label asp-for="Description">@T.T("Description")</label>
+            <textarea asp-for="Description" rows="7" maxlength="1000"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="topics-field">
+            <label asp-for="Deadline">@T.T("Deadline")</label>
+            <input asp-for="Deadline" type="datetime-local" />
+            <span asp-validation-for="Deadline" class="text-danger"></span>
+        </div>
+
+        <div class="topics-field">
+            <label for="taskAttachment">@T.T("Optional file")</label>
+            <input id="taskAttachment" name="attachment" type="file" accept=".pdf,.docx.zip,.png,.jpg,.jpeg" />
+            <span class="topics-help">@T.T("Supported files: PDF, DOCX, ZIP, PNG, JPG.")</span>
+            @Html.ValidationMessage("Attachment", "", new { @class = "text-danger" })
+        </div>
+
+        <div class="topics-actions topics-actions--end">
+            <a asp-action="Index" class="dashboard-card__button">@T.T("Cancel")</a>
+            <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Create Task")</button>
+        </div>
+    </section>
+
+    <aside class="topics-preview topics-card">
+        <div class="topics-card__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Workflow")</p>
+                <h3>@T.T("After creating")</h3>
+                <p class="topics-card__text">@T.T("The task appears on Manage Tasks, where it can be viewed, edited, searched, or deleted.")</p>
+            </div>
+        </div>
+
+        <div class="topics-empty">
+            <h4>@T.T("Clean separation")</h4>
+            <p>@T.T("Create stays here. Management stays in the table page.")</p>
+        </div>
+    </aside>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

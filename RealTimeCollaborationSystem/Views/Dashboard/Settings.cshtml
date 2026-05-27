@@ -1,0 +1,20 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = @T.T("Settings");
+}
+
+<section class="dashboard-grid dashboard-grid--two">
+    <article class="dashboard-card">
+        <p class="dashboard-card__label">@T.T("Account")</p>
+        <h3>@T.T("Profile details")</h3>
+        <p>@T.T("Keep personal information, language preferences, and workspace identity consistent.")</p>
+    </article>
+
+    <article class="dashboard-card">
+        <p class="dashboard-card__label">@T.T("Security")</p>
+        <h3>@T.T("Access and protection")</h3>
+        <p>@T.T("Use account-related settings to support secure access alongside the current session-based sign-in flow.")</p>
+    </article>
+</section>

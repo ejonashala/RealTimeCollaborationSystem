@@ -1,0 +1,26 @@
+﻿@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">@T.T("Error.")</h1>
+<h2 class="text-danger">@T.T("An error occurred while processing your request.")</h2>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>@T.T("Request ID:")</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<h3>@T.T("Development Mode")</h3>
+<p>
+    @T.T("Swapping to") <strong>@T.T("Development")</strong> @T.T("environment will display more detailed information about the error that occurred.")
+</p>
+<p>
+    <strong>@T.T("The Development environment shouldn't be enabled for deployed applications.")</strong>
+    @T.T("It can result in displaying sensitive information from exceptions to end users.")
+    @T.T("For local debugging, enable the") <strong>@T.T("Development")</strong> @T.T("environment by setting the") <strong>@T.T("ASPNETCORE_ENVIRONMENT")</strong> @T.T("environment variable to") <strong>@T.T("Development")</strong> @T.T("and restarting the app.")
+</p>

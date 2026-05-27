@@ -1,0 +1,70 @@
+@model IEnumerable<RealTimeCollaborationSystem.Models.CourseTask>
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = @T.T("Submitted Tasks");
+    var tasks = Model?.ToList() ?? new List<RealTimeCollaborationSystem.Models.CourseTask>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tasks.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead topics-head">
+    <div>
+        <p class="dashboard-kicker">Student</p>
+        <h2>@T.T("Submitted Tasks")</h2>
+        <p class="dashboard-lead">@T.T("A focused list of the tasks you have already submitted.")</p>
+    </div>
+</section>
+
+<section class="topics-card">
+    @if (!tasks.Any())
+    {
+        <div class="topics-empty">
+            <h4>@T.T("No submitted tasks")</h4>
+            <p>@T.T("Your submitted work will appear here after you upload a task file.")</p>
+        </div>
+    }
+    else
+    {
+        <div class="topics-table-wrap">
+            <table class="topics-table">
+                <thead>
+                    <tr>
+                        <th>@T.T("Task")</th>
+                        <th>@T.T("Group")</th>
+                        <th>@T.T("Submitted")</th>
+                        <th>@T.T("Status")</th>
+                        <th>@T.T("Professor")</th>
+                        <th>@T.T("Actions")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in tasks)
+                    {
+                        var submission = task.Submissions.FirstOrDefault();
+                        var isReviewed = string.Equals(submission?.Status, "Reviewed", StringComparison.OrdinalIgnoreCase);
+
+                        <tr>
+                            <td><strong class="management-title">@task.Title</strong></td>
+                            <td>@(task.TopicBatch?.Title ?? @T.T("Group"))</td>
+                            <td>@submission?.SubmittedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <span class="task-status task-status--@(isReviewed ? @T.T("completed") : @T.T("submitted"))">
+                                    @(isReviewed ? @T.T("Completed") : @T.T("Pending"))
+                                </span>
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(task.Professor?.Name) ? @T.T("Professor") : task.Professor.Name)</td>
+                            <td class="topics-table__actions">
+                                <a class="dashboard-card__button" asp-action="Details" asp-route-id="@task.Id">@T.T("Manage")</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

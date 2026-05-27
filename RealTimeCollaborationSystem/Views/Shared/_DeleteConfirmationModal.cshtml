@@ -1,0 +1,28 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+<div class="modal fade delete-confirmation-modal" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Permanent Delete")</p>
+                    <h3 class="modal-title" id="deleteConfirmationModalTitle" data-delete-confirm-title>@T.T("Delete item?")</h3>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label=@T.T("Close")></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="delete-confirmation-modal__item" data-delete-confirm-item hidden></p>
+                <p class="delete-confirmation-modal__message" data-delete-confirm-message>
+                    @T.T("This item will be permanently deleted. This action cannot be undone.")
+                </p>
+            </div>
+
+            <div class="modal-footer delete-confirmation-modal__footer">
+                <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                <button type="button" class="dashboard-card__button delete-confirmation-modal__delete" data-delete-confirm-submit>@T.T("Delete")</button>
+            </div>
+        </div>
+    </div>
+</div>

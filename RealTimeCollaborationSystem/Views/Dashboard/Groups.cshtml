@@ -1,0 +1,367 @@
+@model RealTimeCollaborationSystem.ViewModels.ProfessorGroupsViewModel
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = @T.T("Groups");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/groups.css" asp-append-version="true" />
+}
+
+@if (Model.IsStudent)
+{
+    @if (TempData["GroupsError"] is string groupsError)
+    {
+        <div class="topic-selection-message topic-selection-message--error is-visible">@groupsError</div>
+    }
+
+    @if (TempData["GroupsSuccess"] is string groupsSuccess)
+    {
+        <div class="topic-selection-message is-visible">@groupsSuccess</div>
+    }
+
+    <section class="groups-layout student-groups-layout">
+        <div class="groups-main">
+            @if (!Model.StudentGroups.Any())
+            {
+                <section class="topics-card">
+                    <div class="topics-empty">
+                        <h4>@T.T(string.IsNullOrWhiteSpace(Model.Search) ? "No groups available" : "No groups found")</h4>
+                        <p>@T.T(string.IsNullOrWhiteSpace(Model.Search) ? "Groups created by professors will appear here." : "Try another group name, professor, university, or field.")</p>
+                    </div>
+                </section>
+            }
+            else
+            {
+                @foreach (var group in Model.StudentGroups)
+                {
+                    <article class="topics-card group-batch student-group-card">
+                        <div class="group-batch__head student-group-card__head">
+                            <div class="professor-preview-card__head student-group-card__professor">
+                                <img src="@group.ProfessorPhotoUrl" alt="@group.ProfessorName profile photo" onerror="this.onerror=null;this.src='/images/users/default-avatar.svg';" />
+                                <div>
+                                    <p class="dashboard-kicker">@T.T("Group")</p>
+                                    <h3>@group.Title</h3>
+                                    <span>@group.ProfessorName</span>
+                                </div>
+                            </div>
+
+                            @if (group.IsJoinedByCurrentStudent)
+                            {
+                                <span class="topics-badge topics-badge--selected">@T.T("Joined")</span>
+                            }
+                            else if (group.HasPendingRequest)
+                            {
+                                <span class="topics-badge topics-badge--pending">@T.T("Requested")</span>
+                            }
+                            else
+                            {
+                                <span class="topics-badge topics-badge--active">@T.T("Open")</span>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(group.Description))
+                        {
+                            <p class="topics-card__text student-group-card__description">@group.Description</p>
+                        }
+
+                        <div class="group-batch__stats" aria-label="Group summary">
+                            <span><strong>@group.TopicCount</strong>@T.T("capacity")</span>
+                            <span><strong>@group.AvailableTopicCount</strong> @T.T("open spots")</span>
+                            <span><strong>@group.FilledTopicCount</strong> @T.T("filled")</span>
+                            <span><strong>@group.CreatedAt.ToString("MMM dd")</strong> @T.T("created")</span>
+                        </div>
+
+                        <div class="student-group-card__meta">
+                            <span>@(string.IsNullOrWhiteSpace(group.ProfessorEmail) ? "Email not provided" : group.ProfessorEmail)</span>
+                            <span>@(string.IsNullOrWhiteSpace(group.ProfessorUniversityOrInstitution) ? "University not provided" : group.ProfessorUniversityOrInstitution)</span>
+                            <span>@(string.IsNullOrWhiteSpace(group.ProfessorFieldOfStudy) ? "Field not provided" : group.ProfessorFieldOfStudy)</span>
+                            @if (group.IsJoinedByCurrentStudent && !string.IsNullOrWhiteSpace(group.SelectedTopicTitle))
+                            {
+                                <span>Selected: @group.SelectedTopicTitle</span>
+                            }
+                        </div>
+
+                        <div class="student-group-card__actions">
+                            @if (group.IsJoinedByCurrentStudent)
+                            {
+                                <a class="dashboard-card__button dashboard-card__button--primary" asp-controller="StudentTopics" asp-action="Index">@T.T("View Topics")</a>
+                            }
+                            else if (group.HasPendingRequest)
+                            {
+                                <span class="task-muted">@T.T("Your join request is pending.")</span>
+                            }
+                            else
+                            {
+                                <form asp-action="RequestJoinGroup" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="batchId" value="@group.Id" />
+                                    <input type="hidden" name="search" value="@Model.Search" />
+                                    <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Request to Join Group")</button>
+                                </form>
+                            }
+                        </div>
+                    </article>
+                }
+            }
+        </div>
+
+        <aside class="topics-card groups-search">
+            <div class="topics-card__head">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Search")</p>
+                    <h3>@T.T("Find groups")</h3>
+                    <p class="topics-card__text">@T.T("Search by group, professor, university, field, or topic.")</p>
+                </div>
+            </div>
+
+            <form class="groups-search__form" method="get">
+                <div class="topics-field">
+                    <label for="studentGroupSearch">@T.T("Search groups")</label>
+                    <input id="studentGroupSearch" name="search" value="@Model.Search" placeholder="@T.T("Group or professor...")" />
+                </div>
+                <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Search")</button>
+                @if (!string.IsNullOrWhiteSpace(Model.Search))
+                {
+                    <a class="dashboard-card__button" asp-action="Groups">@T.T("Clear")</a> 
+                }
+            </form>
+
+            <div class="topics-empty groups-search__empty">
+                <h4>@(string.IsNullOrWhiteSpace(Model.Search) ? @T.T("Newest first") : @T.T("Ranked results"))</h4>
+                <p>@(string.IsNullOrWhiteSpace(Model.Search) ? @T.T("All professor groups are sorted from newest to oldest.") : @T.T("Matches are ranked by the closest group and professor details."))</p>
+            </div>
+        </aside>
+    </section>
+}
+else if (!Model.IsProfessor)
+{
+    <section class="dashboard-grid dashboard-grid--two">
+        <article class="dashboard-card">
+            <p class="dashboard-card__label">@T.T("Topic groups")</p>
+            <h3>@T.T("Organized topic ownership")</h3>
+            <p>@T.T("Use the Topics section to review available topic groups and your current selection.")</p>
+        </article>
+    </section>
+}
+else
+{
+    @if (TempData["GroupsError"] is string groupsError)
+    {
+        <div class="topic-selection-message topic-selection-message--error is-visible">@groupsError</div>
+    }
+
+    @if (TempData["GroupsSuccess"] is string groupsSuccess)
+    {
+        <div class="topic-selection-message is-visible">@groupsSuccess</div>
+    }
+
+    <section class="groups-layout">
+        <div class="groups-main">
+            @if (!Model.Batches.Any())
+            {
+                <section class="topics-card">
+                    <div class="topics-empty">
+                        <h4>@T.T("No groups yet")</h4>
+                        <p>@T.T("Create a group first, then student membership will appear here.")</p>
+                    </div>
+                </section>
+            }
+            else
+            {
+                @foreach (var batch in Model.Batches)
+                {
+                    <article class="topics-card group-batch">
+                        <div class="group-batch__head">
+                            <div>
+                                <p class="dashboard-kicker">@T.T("Group")</p>
+                                <h3>@batch.Title</h3>
+                            </div>
+                            <span class="topics-badge @T.T(batch.IsPublished ? "topics-badge--active" : "topics-badge--draft")">
+                                @T.T(batch.IsPublished ? "Active" : "Draft")
+                            </span>
+                        </div>
+
+                        <div class="group-batch__stats" aria-label="Group summary">
+                            <span><strong>@batch.Members.Count</strong>@T.T("students")</span>
+                            <span><strong>@batch.TopicCount</strong>@T.T("capacity")</span>
+                            <span><strong>@batch.AvailableTopicCount</strong>@T.T("open spots")</span>
+                            <span><strong>@batch.TakenTopicCount</strong>@T.T("filled")</span>
+                        </div>
+
+                        @if (!batch.Members.Any())
+                        {
+                            <div class="topics-empty group-batch__empty">
+                                <h4>@T.T("No students in this group")</h4>
+                                <p>@T.T("Search registered students and add them to this group.")</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="group-member-list">
+                                @foreach (var member in batch.Members)
+                                {
+                                    <article class="group-member">
+                                        <img src="@member.PhotoUrl" alt="@member.Name profile photo" onerror="this.onerror=null;this.src='/images/users/default-avatar.svg';" />
+                                        <div>
+                                            <strong>@member.Name</strong>
+                                            <span>@member.Email</span>
+                                            @if (member.JoinedAt.HasValue)
+                                            {
+                                                <span>@T.T("Joined") @member.JoinedAt.Value.ToString("yyyy-MM-dd")</span>
+                                            }
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </article>
+                }
+            }
+        </div>
+
+        <aside class="groups-sidebar">
+            <section class="topics-card groups-search">
+                <div class="topics-card__head">
+                    <div>
+                        <p class="dashboard-kicker">@T.T("Students")</p>
+                        <h3>@T.T("Find registered students")</h3>
+                        <p class="topics-card__text">@T.T("Search by name, email, university, or field of study, then add the student to a group.")</p>
+                    </div>
+                </div>
+
+                <form class="groups-search__form" method="get">
+                    <div class="topics-field">
+                        <label for="studentSearch">@T.T("Search students")</label>
+                        <input id="studentSearch" name="search" value="@Model.Search" placeholder="@T.T("Name, email, university...")" />
+                    </div>
+                    <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Search")</button>
+                    @if (!string.IsNullOrWhiteSpace(Model.Search))
+                    {
+                        <a class="dashboard-card__button" asp-action="Groups">@T.T("Clear")</a>
+                    }
+                </form>
+
+                @if (string.IsNullOrWhiteSpace(Model.Search))
+                {
+                    <div class="topics-empty groups-search__empty">
+                        <h4>@T.T("Start with a search")</h4>
+                        <p>@T.T("Student preview cards will appear here.")</p>
+                    </div>
+                }
+                else if (!Model.SearchResults.Any())
+                {
+                    <div class="topics-empty groups-search__empty">
+                        <h4>@T.T("No students found")</h4>
+                        <p>@T.T("Try another name, email, university, or field.")</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="student-preview-list">
+                        @foreach (var student in Model.SearchResults)
+                        {
+                            <article class="student-preview-card">
+                                <div class="student-preview-card__identity">
+                                    <img src="@student.PhotoUrl" alt="@student.Name profile photo" onerror="this.onerror=null;this.src='/images/users/default-avatar.svg';" />
+                                    <div>
+                                        <strong>@student.Name</strong>
+                                        <span>@student.Email</span>
+                                    </div>
+                                </div>
+
+                                <div class="student-preview-card__meta">
+                                    <span>@(string.IsNullOrWhiteSpace(student.UniversityOrInstitution) ? "University not provided" : student.UniversityOrInstitution)</span>
+                                    <span>@(string.IsNullOrWhiteSpace(student.FieldOfStudy) ? "Field not provided" : student.FieldOfStudy)</span>
+                                </div>
+
+                                <form asp-action="AddStudentToGroup" method="post" class="student-preview-card__assign">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="studentId" value="@student.Id" />
+                                    <input type="hidden" name="search" value="@Model.Search" />
+                                    <div class="topics-field">
+                                        <label for="@($"groupOption-{student.Id}")">@T.T("Add to group")</label>
+                                        <select id="@($"groupOption-{student.Id}")" name="batchId" required disabled="@(!Model.AvailableGroupOptions.Any())">
+                                            @if (!Model.AvailableGroupOptions.Any())
+                                            {
+                                                <option value="">@T.T("No groups with open spots")</option>
+                                            }
+                                            else
+                                            {
+                                                @foreach (var option in Model.AvailableGroupOptions)
+                                                {
+                                                    <option value="@option.BatchId">@option.BatchTitle (@option.AvailableSlots open)</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="dashboard-card__button dashboard-card__button--primary" disabled="@(!Model.AvailableGroupOptions.Any())">@T.T("Add Student")</button>
+                                </form>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+
+            <section class="topics-card group-requests-card">
+                <div class="topics-card__head">
+                    <div>
+                        <p class="dashboard-kicker">@T.T("Requests")</p>
+                        <h3>@T.T("Join requests")</h3>
+                        <p class="topics-card__text">@T.T("Pending requests for your groups.")</p>
+                    </div>
+                </div>
+
+                @if (!Model.PendingJoinRequests.Any())
+                {
+                    <div class="topics-empty groups-search__empty">
+                        <h4>@T.T("No pending requests")</h4>
+                        <p>@T.T("Student requests to join your groups will appear here.")</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="group-request-list">
+                        @foreach (var request in Model.PendingJoinRequests)
+                        {
+                            <article class="group-request-card">
+                                <div class="group-request-card__identity">
+                                    <strong>@request.StudentName</strong>
+                                    @if (!string.IsNullOrWhiteSpace(request.StudentEmail))
+                                    {
+                                        <span>@request.StudentEmail</span>
+                                    }
+                                </div>
+
+                                <div class="group-request-card__meta">
+                                    <span>@request.BatchTitle</span>
+                                    @if (request.RequestedAt.HasValue)
+                                    {
+                                        <time>@request.RequestedAt.Value.ToString("yyyy-MM-dd HH:mm")</time>
+                                    }
+                                </div>
+
+                                <div class="group-request-card__actions">
+                                    <form asp-action="AcceptGroupJoinRequest" asp-route-id="@request.NotificationId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="search" value="@Model.Search" />
+                                        <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Accept")</button>
+                                    </form>
+
+                                    <form asp-action="DenyGroupJoinRequest" asp-route-id="@request.NotificationId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="search" value="@Model.Search" />
+                                        <button type="submit" class="dashboard-card__button">@T.T("Deny")</button>
+                                    </form>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+        </aside>
+    </section>
+}

@@ -1,0 +1,91 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var isHomePage =
+        string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+    var isPrivacyPage =
+        string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(currentAction, "Privacy", StringComparison.OrdinalIgnoreCase);
+
+    var pageTitle = ViewData["Title"]?.ToString();
+    var fullTitle = string.IsNullOrWhiteSpace(pageTitle) ? "CollabSpace" : $"{pageTitle} - CollabSpace";
+}
+
+<!DOCTYPE html>
+<html lang="@(Context.Session.GetString("Language") ?? "sq")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@fullTitle</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/RealTimeCollaborationSystem.styles.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body class="site-body @(isHomePage ? "site-body--home" : string.Empty)">
+    <header class="site-header">
+        <div class="site-shell site-header__inner">
+            <a class="site-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <span class="site-brand__mark">C</span>
+                <span class="site-brand__text">CollabSpace</span>
+            </a>
+
+            <nav class="site-nav" aria-label="Primary navigation">
+                <a class="site-nav__link" href="@Url.Action("Index", "Home")#features">@T.T("Features")</a>
+                <a class="site-nav__link" href="@Url.Action("Index", "Home")#workflow">@T.T("How It Works")</a>
+                <a class="site-nav__link" href="@Url.Action("Index", "Home")#benefits">@T.T("Benefits")</a>
+            </nav>
+
+            @{
+                var currentLanguage = Context.Session.GetString("Language") ?? "sq";
+            }
+            <form asp-controller="Home" asp-action="ChangeLanguage" method="post" class="site-language-form">
+                @Html.AntiForgeryToken()
+
+                <select name="language" onchange="this.form.submit()" class="site-language-select">
+                    <option value="sq" selected="@(currentLanguage == "sq")">SQ</option>
+                    <option value="en" selected="@(currentLanguage == "en")">EN</option>
+                </select>
+            </form>
+
+            <div class="site-header__actions">
+                <a class="site-button site-button--ghost" asp-controller="Account" asp-action="Login">@T.T("Login")</a>
+                <a class="site-button site-button--primary" asp-controller="Account" asp-action="Register">@T.T("Register")</a>
+            </div>
+        </div>
+    </header>
+
+    <main role="main" class="@(isHomePage ? "site-main site-main--home" : "site-main site-shell site-main--content")">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-shell site-footer__inner">
+            <div class="site-footer__brandblock">
+                <span class="site-footer__brand">CollabSpace</span>
+                <p>@T.T("Real-time academic collaboration for students and professors, built for clarity, structure, and progress.")</p>
+            </div>
+
+            <div class="site-footer__links">
+                @if (!isHomePage)
+                {
+                    <a asp-area="" asp-controller="Home" asp-action="Index">@T.T("Home")</a>
+                }
+                @if (!isPrivacyPage)
+                {
+                    <a asp-area="" asp-controller="Home" asp-action="Privacy">@T.T("Privacy")</a>
+                }
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,232 @@
+@model IEnumerable<RealTimeCollaborationSystem.Models.CourseTask>
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = "Tasks";
+    var tasks = Model?.ToList() ?? new List<RealTimeCollaborationSystem.Models.CourseTask>();
+    var groupedTasks = tasks
+        .GroupBy(task => task.TopicBatch?.Title ?? "Group")
+        .OrderBy(group => group.Key)
+        .ToList();
+    var now = DateTime.UtcNow;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tasks.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead topics-head">
+    <div>
+        <p class="dashboard-kicker">@T.T("Student")</p>
+        <h2>@T.T("Tasks")</h2>
+        <p class="dashboard-lead">@T.T("Review assigned tasks, deadlines, and any meeting or guidance links shared by professors.")</p>
+    </div>
+</section>
+
+@if (TempData["TaskSubmissionSuccess"] is string successMessage)
+{
+    <div class="task-alert task-alert--success">@successMessage</div>
+}
+
+@if (TempData["TaskSubmissionError"] is string errorMessage)
+{
+    <div class="task-alert task-alert--error">@errorMessage</div>
+}
+
+@if (!tasks.Any())
+{
+    <section class="topics-card">
+        <div class="topics-empty">
+            <h4>@T.T("No tasks available")</h4>
+            <p>@T.T("Group tasks will appear here after your membership is accepted.")</p>
+        </div>
+    </section>
+}
+else
+{
+    @foreach (var taskGroup in groupedTasks)
+    {
+        <section class="task-group-section">
+            <div class="task-group-section__head">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Group")</p>
+                    <h3>@taskGroup.Key</h3>
+                </div>
+                <span class="topics-badge topics-badge--published">@taskGroup.Count() @(taskGroup.Count() == 1 ? T.T("Task") : T.T("Tasks"))</span>
+            </div>
+
+            <div class="task-grid task-grid--student">
+                @foreach (var task in taskGroup)
+                {
+                    var submission = task.Submissions.FirstOrDefault();
+                    var isPastDeadline = task.Deadline < now;
+                    var statusText = submission != null ? @T.T("Submitted") : isPastDeadline ? @T.T("Deadline Passed") : @T.T("Active");
+                    var statusClass = submission != null ? @T.T("submitted") : isPastDeadline ? @T.T("deadline-passed") : @T.T("active");
+                    var isReviewed = string.Equals(submission?.Status, @T.T("Reviewed"), StringComparison.OrdinalIgnoreCase);
+                    var submitModalId = $"submitTaskModal-{task.Id}";
+                    var fileInputId = $"submissionFile-{task.Id}";
+                    var commentInputId = $"studentComment-{task.Id}";
+
+                    <article class="topics-card task-card task-card--@statusClass">
+                        <div class="task-card__head">
+                            <div>
+                                <p class="dashboard-kicker">@T.T("Student Task")</p>
+                                <h3>@task.Title</h3>
+                            </div>
+                            <span class="task-status task-status--@statusClass">@statusText</span>
+                        </div>
+
+                        <p class="topic-card__description">@task.Description</p>
+
+                        <div class="task-card__meta-grid">
+                            <div>
+                                <span>@T.T("Deadline")</span>
+                                <strong>@task.Deadline.ToString("yyyy-MM-dd HH:mm")</strong>
+                            </div>
+                            <div>
+                                <span>@T.T("Professor")</span>
+                                <strong>@(string.IsNullOrWhiteSpace(task.Professor?.Name) ? @T.T("Professor") : task.Professor.Name)</strong>
+                            </div>
+                        </div>
+
+                        <div class="task-card__resources">
+                            @if (!string.IsNullOrWhiteSpace(task.AttachmentPath))
+                            {
+                                <a class="task-link" href="@task.AttachmentPath" download="@task.AttachmentFileName">
+                                    @T.T("Download task file")
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="task-muted">@T.T("No task file attached")</span>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(task.MeetingLink))
+                            {
+                                <a class="task-link" href="@task.MeetingLink" target="_blank" rel="noopener">
+                                    @T.T("Open guidance link")
+                                </a>
+                            }
+                        </div>
+
+                        @if (submission == null && !isPastDeadline)
+                        {
+                            <button type="button" class="dashboard-card__button dashboard-card__button--primary" data-bs-toggle="modal" data-bs-target="#@submitModalId">
+                                @T.T("Submit Work")
+                            </button>
+                        }
+                        else if (submission == null)
+                        {
+                            <span class="task-muted">@T.T("Submissions are closed.")</span>
+                        }
+                        else
+                        {
+                            <div class="task-submission-block">
+                                <div>
+                                    <span>@T.T("Submitted")</span>
+                                    <strong>@submission.SubmittedAt.ToString("yyyy-MM-dd HH:mm")</strong>
+                                </div>
+                                <div>
+                                    <span>@T.T("Submitted file")</span>
+                                    <a class="task-link" href="@submission.FilePath" target="_blank" rel="noopener">@submission.FileName</a>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(submission.StudentComment))
+                                {
+                                    <div class="task-submission-block__wide">
+                                        <span>@T.T("Comment")</span>
+                                        <p>@submission.StudentComment</p>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (isReviewed)
+                            {
+                                <div class="task-reviewed-panel">
+                                    <span>Professor feedback</span>
+                                    @if (!string.IsNullOrWhiteSpace(submission.Feedback))
+                                    {
+                                        <p>@submission.Feedback</p>
+                                    }
+                                    @if (submission.Grade.HasValue)
+                                    {
+                                        <strong>@T.T("Grade"):</strong> @submission.Grade.Value.ToString("0.##")
+                                    }
+                                </div>
+                            }
+
+                            <div class="task-card__actions task-card__actions--student">
+                                @if (isPastDeadline)
+                                {
+                                    <span class="task-muted">@T.T("Submission changes are closed.")</span>
+                                }
+                                else
+                                {
+                                    <button type="button" class="dashboard-card__button dashboard-card__button--primary" data-bs-toggle="modal" data-bs-target="#@submitModalId">
+                                        @T.T("Update Submission")
+                                    </button>
+
+                                    <form asp-action="DeleteSubmission" asp-route-id="@submission.Id" method="post"
+                                          data-delete-confirm
+                                          data-delete-title="@T.T("Delete submission?")"
+                                          data-delete-item="@submission.FileName"
+                                          data-delete-message="@T.T("This submission will be permanently deleted. This action cannot be undone.")">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dashboard-card__button task-delete-button">@T.T("Delete submission")</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </article>
+
+                    @if (!isPastDeadline)
+                    {
+                        <div class="modal fade task-modal student-submit-modal" id="@submitModalId" tabindex="-1" aria-labelledby="@($"{submitModalId}Title")" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <form asp-action="Submit" asp-route-taskId="@task.Id" method="post" enctype="multipart/form-data">
+                                        @Html.AntiForgeryToken()
+
+                                        <div class="modal-header">
+                                            <div>
+                                                <p class="dashboard-kicker">Student Task</p>
+                                                <h3 class="modal-title" id="@($"{submitModalId}Title")">@(submission == null ? @T.T("Submit Work") : @T.T("Update Submission"))</h3>
+                                            </div>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body task-modal__body">
+                                            <div class="student-submit-modal__task">
+                                                <strong>@task.Title</strong>
+                                                <span>@T.T("Deadline") @task.Deadline.ToString("yyyy-MM-dd HH:mm")</span>
+                                            </div>
+
+                                            <div class="topics-field">
+                                                <label for="@fileInputId">@(submission == null ? @T.T("Completed work file") : @T.T("Upload improved file"))</label>
+                                                <input id="@fileInputId" name="submissionFile" type="file" accept=".pdf,.docx,.zip,.png,.jpg,.jpeg" required />
+                                                <span class="topics-help">@T.T("Supported files: PDF, DOCX, ZIP, PNG, JPG.")</span>
+                                            </div>
+
+                                            <div class="topics-field">
+                                                <label for="@commentInputId">Comment optional</label>
+                                                <textarea id="@commentInputId" name="studentComment" rows="4" maxlength="1000" placeholder="@T.T("Add a short note for the professor")">@submission?.StudentComment</textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer task-modal__footer">
+                                            <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                                            <button type="submit" class="dashboard-card__button dashboard-card__button--primary">
+                                                @(submission == null ? @T.T("Submit Work") : @T.T("Update Submission"))
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </section>
+    }
+}

@@ -1,0 +1,438 @@
+.groups-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(21rem, 0.4fr);
+    gap: 1.1rem;
+    align-items: start;
+}
+
+.groups-main,
+.student-preview-list,
+.student-professor-list,
+.professor-batch-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.group-batch {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.group-batch__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.group-batch__head h3 {
+    margin: 0;
+    color: var(--dashboard-text);
+}
+
+.group-batch__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.group-batch__stats span {
+    display: grid;
+    gap: 0.12rem;
+    min-height: 3.25rem;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 0.78rem;
+    color: var(--dashboard-text-soft);
+    font-size: 0.76rem;
+    font-weight: 800;
+    background: rgba(248, 250, 252, 0.74);
+}
+
+.group-batch__stats strong {
+    color: var(--dashboard-text);
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+.group-batch__empty {
+    padding: 1rem;
+    text-align: left;
+}
+
+.group-member-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.65rem;
+}
+
+.group-member,
+.student-preview-card {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.group-member {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.7rem;
+    align-items: center;
+    padding: 0.75rem;
+}
+
+.group-member img,
+.student-preview-card__identity img {
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.group-member div,
+.student-preview-card__identity div {
+    display: grid;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.group-member strong,
+.student-preview-card strong {
+    overflow: hidden;
+    color: var(--dashboard-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.group-member span,
+.student-preview-card span {
+    overflow: hidden;
+    color: var(--dashboard-text-soft);
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.groups-search {
+    position: sticky;
+    top: 1rem;
+    display: grid;
+    gap: 0.75rem;
+    align-self: start;
+}
+
+.groups-sidebar {
+    position: sticky;
+    top: 1rem;
+    display: grid;
+    gap: 0.85rem;
+    align-self: start;
+}
+
+.groups-sidebar .groups-search {
+    position: static;
+    top: auto;
+}
+
+.groups-search .topics-card__head {
+    margin-bottom: 0;
+}
+
+.groups-search__form,
+.student-preview-card__assign {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.groups-search__form .dashboard-card__button,
+.student-preview-card__assign .dashboard-card__button {
+    width: 100%;
+}
+
+.groups-search__empty {
+    padding: 1rem;
+}
+
+.student-preview-card {
+    display: grid;
+    gap: 0.65rem;
+    padding: 0.8rem;
+}
+
+.group-requests-card {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.group-request-list {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.group-request-card {
+    display: grid;
+    gap: 0.65rem;
+    padding: 0.8rem;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.group-request-card__identity,
+.group-request-card__meta {
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
+}
+
+.group-request-card__identity strong {
+    overflow: hidden;
+    color: var(--dashboard-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.group-request-card__identity span,
+.group-request-card__meta span,
+.group-request-card__meta time {
+    overflow: hidden;
+    color: var(--dashboard-text-soft);
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.group-request-card__meta {
+    padding: 0.65rem;
+    border-radius: 0.75rem;
+    background: rgba(248, 250, 252, 0.78);
+}
+
+.group-request-card__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.group-request-card__actions form {
+    margin: 0;
+}
+
+.group-request-card__actions .dashboard-card__button {
+    width: 100%;
+    min-height: 2.35rem;
+}
+
+.student-groups-layout .groups-main {
+    gap: 0.9rem;
+}
+
+.student-group-card {
+    gap: 0.8rem;
+}
+
+.student-group-card__head {
+    align-items: center;
+}
+
+.student-group-card__professor {
+    min-width: 0;
+}
+
+.student-group-card__professor h3 {
+    margin-bottom: 0.12rem;
+}
+
+.student-group-card__description {
+    max-width: 58rem;
+}
+
+.student-group-card__meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 0.45rem;
+}
+
+.student-group-card__meta span {
+    overflow: hidden;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 0.72rem;
+    color: var(--dashboard-text-soft);
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: rgba(248, 250, 252, 0.72);
+}
+
+.student-group-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    padding-top: 0.1rem;
+}
+
+.student-group-card__actions form {
+    margin: 0;
+}
+
+.student-group-card__actions .dashboard-card__button {
+    width: auto;
+    min-width: 10.5rem;
+}
+
+.student-professor-search {
+    margin-bottom: 1rem;
+}
+
+.student-professor-search .topics-card__head {
+    margin-bottom: 0.8rem;
+}
+
+.student-professor-search__form {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: end;
+}
+
+.student-professor-search__form .dashboard-card__button {
+    width: auto;
+    min-width: 7rem;
+}
+
+.professor-preview-card {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.professor-preview-card__head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.professor-preview-card__head img {
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.professor-preview-card__head h3 {
+    margin: 0;
+    color: var(--dashboard-text);
+}
+
+.professor-preview-card__head span {
+    color: var(--dashboard-text-soft);
+}
+
+.professor-batch-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 0.85rem;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.professor-batch-item div {
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
+}
+
+.professor-batch-item strong {
+    overflow: hidden;
+    color: var(--dashboard-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.professor-batch-item span {
+    color: var(--dashboard-text-soft);
+    font-size: 0.86rem;
+}
+
+.professor-batch-item form {
+    margin: 0;
+}
+
+.professor-batch-item .dashboard-card__button {
+    width: auto;
+    white-space: nowrap;
+}
+
+.student-preview-card__identity {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.65rem;
+    align-items: center;
+}
+
+.student-preview-card__meta {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.65rem;
+    border-radius: 0.75rem;
+    background: rgba(248, 250, 252, 0.78);
+}
+
+body.dashboard-body.dashboard-theme--dark .group-batch__stats span,
+body.dashboard-body.dashboard-theme--dark .group-request-card__meta,
+body.dashboard-body.dashboard-theme--dark .student-preview-card__meta,
+body.dashboard-body.dashboard-theme--dark .student-group-card__meta span {
+    border-color: rgba(148, 163, 184, 0.14);
+    background: rgba(15, 23, 42, 0.46);
+}
+
+body.dashboard-body.dashboard-theme--dark .group-member,
+body.dashboard-body.dashboard-theme--dark .group-request-card,
+body.dashboard-body.dashboard-theme--dark .student-preview-card,
+body.dashboard-body.dashboard-theme--dark .professor-batch-item {
+    border-color: rgba(148, 163, 184, 0.14);
+    background: rgba(15, 23, 42, 0.44);
+}
+
+@media (max-width: 980px) {
+    .groups-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .groups-search {
+        position: static;
+    }
+
+    .groups-sidebar {
+        position: static;
+    }
+
+    .group-batch__stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .group-batch__head,
+    .student-professor-search__form,
+    .professor-batch-item {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .student-professor-search__form .dashboard-card__button,
+    .professor-batch-item .dashboard-card__button,
+    .student-group-card__actions .dashboard-card__button {
+        width: 100%;
+    }
+
+    .group-batch__stats {
+        grid-template-columns: 1fr;
+    }
+}

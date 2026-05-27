@@ -1,0 +1,20 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = @T.T("Tasks");
+}
+
+<section class="dashboard-grid dashboard-grid--two">
+    <article class="dashboard-card">
+        <p class="dashboard-card__label">@T.T("Upcoming")</p>
+        <h3>@T.T("Deadlines that need focus")</h3>
+        <p>@T.T("Keep the next submissions visible so nothing important slips through the cracks.")</p>
+    </article>
+
+    <article class="dashboard-card">
+        <p class="dashboard-card__label">@T.T("Ownership")</p>
+        <h3>@T.T("Clear responsibility")</h3>
+        <p>@T.T("Make it obvious who is doing what and where support is still needed.")</p>
+    </article>
+</section>

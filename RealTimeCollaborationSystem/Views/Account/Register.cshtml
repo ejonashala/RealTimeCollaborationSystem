@@ -1,0 +1,99 @@
+@model RealTimeCollaborationSystem.Models.Dtos.RegisterDto
+
+@{
+    ViewData["Title"] = "Sign Up";
+    Layout = "_AuthLayout";
+}
+
+<link rel="stylesheet" href="~/css/login.css" />
+<link rel="stylesheet" href="~/css/toast.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+<div class="login-container">
+    <div class="login-box login-box--register">
+
+        <div class="login-header">
+            <h1>CollabSpace</h1>
+            <p>Create your account</p>
+        </div>
+
+        <form asp-action="Register" method="post" novalidate class="auth-form auth-form--register">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="input-group">
+                <label><i class="fa fa-user"></i> Name</label>
+                <input asp-for="Name" placeholder="Enter your name" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="input-group">
+                <label><i class="fa fa-envelope"></i> Email</label>
+                <input asp-for="Email" placeholder="you@example.com" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="input-group">
+                <label for="Password">
+                    <i class="fa fa-lock"></i> Password
+                </label>
+
+                <div class="password-box">
+                    <input asp-for="Password"
+                           type="password"
+                           placeholder="Enter a password" />
+
+                    <i class="fa fa-eye-slash eye-toggle"
+                       data-target="Password"></i>
+                </div>
+
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+
+            <div class="input-group">
+                <label for="Confirm">
+                    <i class="fa fa-lock"></i> Confirm Password
+                </label>
+
+                <div class="password-box">
+                    <input asp-for="Confirm"
+                           type="password"
+                           placeholder="Repeat your password" />
+
+                    <i class="fa fa-eye-slash eye-toggle"
+                       data-target="Confirm"></i>
+                </div>
+
+                <span asp-validation-for="Confirm" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="login-btn">Create Account</button>
+
+            <p class="signup-link">
+                Already have an account?
+                <a href="/Account/Login">Log in</a>
+            </p>
+
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll(".eye-toggle").forEach(icon => {
+            icon.addEventListener("click", function () {
+                const input = document.getElementById(this.dataset.target);
+                const show = input.type === "password";
+
+                input.type = show ? "text" : "password";
+
+                this.classList.toggle("fa-eye", show);
+                this.classList.toggle("fa-eye-slash", !show);
+            });
+        });
+    </script>
+}
+
+
+

@@ -1,0 +1,307 @@
+@using System.Linq
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    var currentTheme = ViewData["CurrentTheme"]?.ToString() ?? "light";
+
+    var successMessage = TempData["Success"]?.ToString();
+    var infoMessage = TempData["Info"]?.ToString();
+    var errorMessage = TempData["Error"]?.ToString();
+    var validationErrors = ViewData.ModelState.Values
+        .SelectMany(value => value.Errors)
+        .Select(error => error.ErrorMessage)
+        .Where(message => !string.IsNullOrWhiteSpace(message))
+        .ToList();
+
+    var nameValue = ViewData.ModelState["Name"]?.AttemptedValue
+        ?? ViewData["SettingsName"]?.ToString()
+        ?? Context.Session.GetString("UserName")
+        ?? string.Empty;
+
+    var emailValue = ViewData.ModelState["Email"]?.AttemptedValue
+        ?? ViewData["SettingsEmail"]?.ToString()
+        ?? Context.Session.GetString("UserEmail")
+        ?? string.Empty;
+
+    var roleValue = ViewData["SettingsRole"]?.ToString()
+        ?? Context.Session.GetString("UserRole")
+        ?? string.Empty;
+
+    var photoUrl = ViewData["PhotoUrl"]?.ToString()
+        ?? Context.Session.GetString("PhotoUrl")
+        ?? "/images/users/default-avatar.svg";
+
+    var nameError = ViewData.ModelState["Name"]?.Errors.FirstOrDefault()?.ErrorMessage;
+    var currentPasswordError = ViewData.ModelState["CurrentPassword"]?.Errors.FirstOrDefault()?.ErrorMessage;
+    var newPasswordError = ViewData.ModelState["NewPassword"]?.Errors.FirstOrDefault()?.ErrorMessage;
+    var confirmPasswordError = ViewData.ModelState["ConfirmPassword"]?.Errors.FirstOrDefault()?.ErrorMessage;
+
+    string ThemeClass(string themeName)
+    {
+        var baseClass = string.Equals(themeName, "dark", StringComparison.OrdinalIgnoreCase)
+            ? "theme-btn theme-btn-dark"
+            : "theme-btn";
+
+        return string.Equals(currentTheme, themeName, StringComparison.OrdinalIgnoreCase)
+            ? $"{baseClass} theme-btn--active"
+            : baseClass;
+    }
+}
+
+<div class="settings-page @(currentTheme == "dark" ? "settings-page--dark" : string.Empty)">
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="success-message" id="settings-feedback" role="status" aria-live="polite">
+            @successMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(infoMessage))
+    {
+        <div class="info-message" id="settings-feedback" role="status" aria-live="polite">
+            @infoMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="error-message" id="settings-feedback" role="alert">
+            @errorMessage
+        </div>
+    }
+
+    @if (validationErrors.Count > 0)
+    {
+        <div class="error-message settings-validation-summary" role="alert">
+            <strong>@T.T("Please fix the following issues:")</strong>
+            <ul>
+                @foreach (var validationError in validationErrors)
+                {
+                    <li>@validationError</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="settings-stack">
+        <div class="settings-column settings-column--left">
+        <section class="settings-card settings-card--account">
+            <div class="settings-section-heading">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Account")</p>
+                    <h3 class="settings-section-title">@T.T("Account profile")</h3>
+                    <p class="settings-section-text">@T.T("Manage the identity shown across your workspace.")</p>
+                </div>
+            </div>
+
+            <form asp-controller="Settings" asp-action="Index" method="post" class="settings-form">
+                @Html.AntiForgeryToken()
+
+                <div class="settings-profile">
+                    <button type="button" class="settings-profile__photo" data-photo-modal-open aria-label="@T.T("Change profile photo")">
+                        <img data-session-photo src="@photoUrl" alt="@nameValue profile photo" onerror="this.onerror=null;this.src='/images/users/default-avatar.svg';" />
+                        <span>@T.T("Change photo")</span>
+                    </button>
+
+                    <div class="settings-profile__identity">
+                        <strong>@nameValue</strong>
+                        <span>@emailValue</span>
+                    </div>
+                </div>
+
+                <div class="settings-fields">
+                    <div class="form-group">
+                        <label for="settingsName">@T.T("Full Name")</label>
+                        <input id="settingsName" name="Name" class="form-control" value="@nameValue" placeholder="@T.T("Enter your full name")" />
+                        @if (!string.IsNullOrWhiteSpace(nameError))
+                        {
+                            <span class="field-validation-error">@nameError</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="settingsEmail">@T.T("Email")</label>
+                        <input id="settingsEmail" name="Email" class="form-control" value="@emailValue" readonly />
+                        <span class="input-note">@T.T("Email is locked for account security.")</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="settingsRole">@T.T("Role")</label>
+                        <input id="settingsRole" class="form-control" value="@roleValue" readonly />
+                        <span class="input-note">@T.T("Role is managed by the account type.")</span>
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button type="submit" class="btn-save">@T.T("Save changes")</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="settings-card settings-card--preferences">
+            <div class="settings-section-heading">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Preferences")</p>
+                    <h3 class="settings-section-title">@T.T("Visual mode")</h3>
+                    <p class="settings-section-text">@T.T("Switch between a bright productivity setup and a darker, focused look.")</p>
+                </div>
+            </div>
+
+            <form asp-controller="Settings" asp-action="SetTheme" method="post" class="settings-form settings-form--compact">
+                @Html.AntiForgeryToken()
+
+                <div class="theme-buttons">
+                    <button type="submit" name="theme" value="light" class="@ThemeClass("light")">
+                        <span class="theme-btn__preview theme-btn__preview--light"></span>
+                        <span class="theme-btn__content">
+                            <strong>@T.T("Light")</strong>
+                            <small>@T.T("Bright cards and crisp contrast for daytime work.")</small>
+                        </span>
+                    </button>
+
+                    <button type="submit" name="theme" value="dark" class="@ThemeClass("dark")">
+                        <span class="theme-btn__preview theme-btn__preview--dark"></span>
+                        <span class="theme-btn__content">
+                            <strong>@T.T("Dark")</strong>
+                            <small>@T.T("Deeper surfaces for late sessions and reduced glare.")</small>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        </div>
+
+        <div class="settings-column settings-column--right">
+        <section class="settings-card settings-card--language">
+            <div class="settings-section-heading">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Language")</p>
+                    <h3 class="settings-section-title">@T.T("Interface language")</h3>
+                    <p class="settings-section-text">@T.T("Choose the language you want to use when language support is enabled.")</p>
+                </div>
+            </div>
+
+                @{
+                    var currentLanguage = Context.Session.GetString("Language") ?? "sq";
+                }
+                <form class="settings-form settings-form--compact" asp-action="ChangeLanguage" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="settings-fields settings-fields--inline">
+                        <div class="form-group">
+                            <label for="language">@T.T("Language")</label>
+                            <select id="language" name="language" class="language-select">
+                                <option value="sq" selected="@(currentLanguage == "sq")">@T.T("shqip")</option>
+                                <option value="en" selected="@(currentLanguage == "en")">@T.T("english")</option>
+                            </select>
+                        </div>
+
+                        <div class="settings-actions">
+                            <button type="submit" class="btn-save">@T.T("Save language")</button>
+                        </div>
+                    </div>
+                </form>
+        </section>
+
+        <section class="settings-card settings-card--password">
+            <div class="settings-section-heading">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Password")</p>
+                    <h3 class="settings-section-title">@T.T("Change password")</h3>
+                    <p class="settings-section-text">@T.T("Verify your current password before saving a new one.")</p>
+                </div>
+            </div>
+
+            <form asp-controller="Settings" asp-action="Password" method="post" class="settings-form">
+                @Html.AntiForgeryToken()
+
+                <div class="settings-fields">
+                    <div class="form-group">
+                        <label for="CurrentPassword">@T.T("Current password")</label>
+                        <div class="password-input">
+                            <input id="CurrentPassword" name="CurrentPassword" type="password" class="form-control" autocomplete="current-password" />
+                            <button type="button" class="password-toggle" data-password-toggle data-target="CurrentPassword" aria-label=@T.T("Show current password")>
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.8-6 10-6 10 6 10 6-3.8 6-10 6S2 12 2 12Z"></path>
+                                    <circle cx="12" cy="12" r="3.2"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(currentPasswordError))
+                        {
+                            <span class="field-validation-error">@currentPasswordError</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="NewPassword">@T.T("New password")</label>
+                        <div class="password-input">
+                            <input id="NewPassword" name="NewPassword" type="password" class="form-control" autocomplete="new-password" minlength="6" />
+                            <button type="button" class="password-toggle" data-password-toggle data-target="NewPassword" aria-label=@T.T("Show new password")>
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.8-6 10-6 10 6 10 6-3.8 6-10 6S2 12 2 12Z"></path>
+                                    <circle cx="12" cy="12" r="3.2"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(newPasswordError))
+                        {
+                            <span class="field-validation-error">@newPasswordError</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ConfirmPassword">@T.T("Confirm password")</label>
+                        <div class="password-input">
+                            <input id="ConfirmPassword" name="ConfirmPassword" type="password" class="form-control" autocomplete="new-password" minlength="6" />
+                            <button type="button" class="password-toggle" data-password-toggle data-target="ConfirmPassword" aria-label=@T.T("Show password confirmation")>
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.8-6 10-6 10 6 10 6-3.8 6-10 6S2 12 2 12Z"></path>
+                                    <circle cx="12" cy="12" r="3.2"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(confirmPasswordError))
+                        {
+                            <span class="field-validation-error">@confirmPasswordError</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button type="submit" class="btn-save">@T.T("Update password")</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="settings-card danger-zone">
+            <div class="danger-header">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Danger Zone")</p>
+                    <h3 class="settings-section-title">@T.T("Delete account")</h3>
+                </div>
+                <span class="danger-badge">@T.T("Permanent")</span>
+            </div>
+
+            <p class="danger-text">
+                @T.T("This permanently removes your account and clears the current session.")
+            </p>
+
+            <div class="danger-actions">
+                <form asp-controller="Settings" asp-action="DeleteMyAccount" method="post"
+                      data-delete-confirm
+                      data-delete-title="@T.T("Delete account?")"
+                      data-delete-item="@emailValue"
+                      data-delete-message="@T.T("This account will be permanently deleted. Your access will be removed immediately and you will be signed out.")"
+                      data-delete-confirm-text="@T.T("Delete account")"
+                      data-delete-confirm-busy-text="@T.T("Deleting account...")">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="danger-btn">@T.T("Delete my account")</button>
+                </form>
+            </div>
+        </section>
+        </div>
+    </div>
+</div>

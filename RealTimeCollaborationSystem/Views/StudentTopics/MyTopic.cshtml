@@ -1,0 +1,62 @@
+@model IEnumerable<RealTimeCollaborationSystem.Models.Topic>
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = @T.T("My Topic");
+    var topics = Model?.ToList() ?? new List<RealTimeCollaborationSystem.Models.Topic>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead topics-head">
+    <div>
+        <p class="dashboard-kicker">Student</p>
+        <h2>@T.T("My Topic")</h2>
+        <p class="dashboard-lead">@T.T("Your selected topic appears here for quick review.")</p>
+    </div>
+</section>
+
+<section class="topics-card student-my-topic-card">
+    @if (!topics.Any())
+    {
+        <div class="topics-empty">
+            <h4>@T.T("No selected topic")</h4>
+            <p>@T.T("Choose an available topic from the Topics section when you are ready.")</p>
+        </div>
+    }
+    else
+    {
+        <div class="topics-table-wrap student-topic-table-wrap">
+            <table class="topics-table student-topic-table">
+                <thead>
+                    <tr>
+                        <th>@T.T("Topic")</th>
+                        <th>@T.T("Group")</th>
+                        <th>@T.T("Professor")</th>
+                        <th>@T.T("Selected")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var topic in topics)
+                    {
+                        <tr>
+                            <td>
+                                <strong class="management-title">@topic.Title</strong>
+                                @if (!string.IsNullOrWhiteSpace(topic.Description))
+                                {
+                                    <span class="management-muted">@topic.Description</span>
+                                }
+                            </td>
+                            <td>@(topic.TopicBatch?.Title ?? @T.T("Topic group"))</td>
+                            <td>@(string.IsNullOrWhiteSpace(topic.TopicBatch?.CreatedByProfessor?.Name) ? @T.T("Professor") : topic.TopicBatch.CreatedByProfessor.Name)</td>
+                            <td>@topic.ReservedAt?.ToString("yyyy-MM-dd HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

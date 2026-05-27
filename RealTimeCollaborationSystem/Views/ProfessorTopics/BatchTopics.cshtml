@@ -1,0 +1,359 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+@model RealTimeCollaborationSystem.Models.TopicBatch
+
+@{
+    ViewData["Title"] =@T.T("Batch Topics");
+    var topics = Model.Topics.OrderBy(t => t.Title).ToList();
+    var topicFiles = ViewBag.TopicFiles as Dictionary<int, List<RealTimeCollaborationSystem.Controllers.ProfessorTopicsController.TopicFileView>>
+        ?? new Dictionary<int, List<RealTimeCollaborationSystem.Controllers.ProfessorTopicsController.TopicFileView>>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tasks.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead topics-head">
+    <div>
+        <p class="dashboard-kicker">@T.T("Professor")</p>
+        <h2>@Model.Title</h2>
+        <p class="dashboard-lead">
+            @T.T("Manage the topics inside this batch before publishing them for students.")
+        </p>
+    </div>
+</section>
+
+<section class="topics-actions topics-actions--navigation">
+    <a class="dashboard-card__button topics-back-button" asp-action="Index">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 18 9 12l6-6"></path>
+        </svg>
+        <span>@T.T("Back to Batches")</span>
+    </a>
+</section>
+
+@if (TempData["ProjectError"] is string projectError)
+{
+    <div class="topic-selection-message is-visible">@projectError</div>
+}
+
+<section class="topics-summary">
+    <article class="topics-info">
+        <span class="topics-info__label">@T.T("Professor")</span>
+        <strong>@(string.IsNullOrWhiteSpace(Model.CreatedByProfessor?.Name) ? T.T("Professor") : Model.CreatedByProfessor.Name)</strong>
+    </article>
+
+    <article class="topics-info">
+        <span class="topics-info__label">Created At</span>
+        <strong>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</strong>
+    </article>
+
+    <article class="topics-info">
+        <span class="topics-info__label">@T.T("Status")</span>
+        <strong>@(Model.IsPublished ? T.T("Active") : T.T("Draft"))</strong>
+    </article>
+
+    <article class="topics-info">
+        <span class="topics-info__label">@T.T("Topics")</span>
+        <strong>@topics.Count</strong>
+    </article>
+</section>
+
+<section class="topics-card">
+    <div class="topics-card__head">
+        <div>
+            <p class="dashboard-kicker">@T.T("Topics")</p>
+            <h3>@T.T("Batch topic list")</h3>
+            <p class="topics-card__text">@T.T("Review the topics in this batch and continue building it over time.")</p>
+        </div>
+        <button type="button" class="dashboard-card__button dashboard-card__button--primary topics-create-button" data-bs-toggle="modal" data-bs-target="#addBatchTopicsModal">
+            @T.T("Add Topics")
+        </button>
+    </div>
+
+    @if (!topics.Any())
+    {
+        <div class="topics-empty">
+            <h4>@T.T("No topics in this batch yet")</h4>
+            <p>@T.T("This batch is ready for topic management when you add the next step.")</p>
+        </div>
+    }
+    else
+    {
+        <form class="management-toolbar" data-topic-management-filter>
+            <div class="topics-field">
+                <label for="batchTopicSearch">Search</label>
+                <input id="batchTopicSearch" type="search" placeholder="@T.T("Search topic title")" data-topic-search />
+            </div>
+            <div class="topics-field">
+                <label for="batchTopicStatus">@T.T("Status")</label>
+                <select id="batchTopicStatus" data-topic-status-filter>
+                    <option value="">@T.T("All statuses")</option>
+                    <option value="Available">@T.T("Available")</option>
+                    <option value="Taken">@T.T("Taken")</option>
+                </select>
+            </div>
+            <div class="management-toolbar__actions">
+                <button type="reset" class="dashboard-card__button">@T.T("Reset")</button>
+            </div>
+        </form>
+
+        <div class="topics-table-wrap">
+            <table class="topics-table">
+                <thead>
+                    <tr>
+                        <th>@T.T("Topic title")</th>
+                        <th>@T.T("Status")</th>
+                        <th>@T.T("Selected by")</th>
+                        <th>@T.T("Files")</th>
+                        <th>@T.T("Actions")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var topic in topics)
+                    {
+                        var isTaken = topic.ReservedByStudentId.HasValue
+                            || string.Equals(topic.Status, "Taken", StringComparison.OrdinalIgnoreCase);
+                        var statusText = isTaken ? "Taken" : "Available";
+                        var selectedBy = "-";
+                        var editModalId = $"editTopicModal-{topic.Id}";
+                        var filesModalId = $"topicFilesModal-{topic.Id}";
+                        var files = topicFiles.TryGetValue(topic.Id, out var topicFileList)
+                            ? topicFileList
+                            : new List<RealTimeCollaborationSystem.Controllers.ProfessorTopicsController.TopicFileView>();
+
+                        if (isTaken && topic.ReservedByStudent != null)
+                        {
+                            selectedBy = string.IsNullOrWhiteSpace(topic.ReservedByStudent.Name)
+                                ? topic.ReservedByStudent.Email
+                                : $"{topic.ReservedByStudent.Name} ({topic.ReservedByStudent.Email})";
+                        }
+
+                        <tr data-topic-row data-topic-title="@topic.Title.ToLowerInvariant()" data-topic-status="@statusText">
+                            <td><strong class="management-title">@topic.Title</strong></td>
+                            <td>
+                                <span class="topics-badge @(isTaken ? "topics-badge--taken" : "topics-badge--available")">
+                                    @statusText
+                                </span>
+                            </td>
+                            <td>@selectedBy</td>
+                            <td>
+                                <span class="topics-badge @(files.Any() ? "topics-badge--active" : "topics-badge--pending")">
+                                    @files.Count file@(files.Count == 1 ? "" : "s")
+                                </span>
+                            </td>
+                            <td class="topics-table__actions">
+                                <div class="management-row-actions">
+                                    @if (!isTaken)
+                                    {
+                                        <button type="button" class="dashboard-card__button" data-bs-toggle="modal" data-bs-target="#@editModalId">@T.T("Edit")</button>
+                                    }
+                                    <button type="button" class="dashboard-card__button" data-bs-toggle="modal" data-bs-target="#@filesModalId">@T.T("Files")</button>
+                                    @if (!isTaken)
+                                    {
+                                        <form asp-action="DeleteTopic" asp-route-id="@topic.Id" method="post"
+                                              data-delete-confirm
+                                              data-delete-title="@T.T("Delete topic?")"
+                                              data-delete-item="@topic.Title"
+                                              data-delete-message="@T.T("This topic will be permanently deleted from the batch. This action cannot be undone.")">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dashboard-card__button topic-delete-button">@T.T("Delete")</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+
+                        @if (!isTaken)
+                        {
+                            <div class="modal fade task-modal" id="@editModalId" tabindex="-1" aria-labelledby="@($"{editModalId}Title")" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <form asp-action="EditTopic" asp-route-id="@topic.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <div class="modal-header">
+                                                <div>
+                                                    <p class="dashboard-kicker">@T.T("Topic")</p>
+                                                    <h3 class="modal-title" id="@($"{editModalId}Title")">@T.T("Edit Topic")</h3>
+                                                </div>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body task-modal__body">
+                                                <div class="topics-field">
+                                                    <label for="@($"topicTitle-{topic.Id}")">@T.T("Topic title")</label>
+                                                    <input id="@($"topicTitle-{topic.Id}")" name="title" value="@topic.Title" maxlength="200" required />
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer task-modal__footer">
+                                                <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                                                <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Save")</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="modal fade task-modal" id="@filesModalId" tabindex="-1" aria-labelledby="@($"{filesModalId}Title")" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <div>
+                                            <p class="dashboard-kicker">@T.T("Topic files")</p>
+                                            <h3 class="modal-title" id="@($"{filesModalId}Title")">@topic.Title</h3>
+                                        </div>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body task-modal__body">
+                                        @if (files.Any())
+                                        {
+                                            <div class="topic-file-list">
+                                                @foreach (var file in files)
+                                                {
+                                                    <a class="task-link" href="@file.Url" target="_blank" rel="noopener">@file.FileName</a>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="topics-empty">
+                                                <h4>@T.T("No files attached")</h4>
+                                                <p>@T.T("Add files to this specific topic when you need supporting material.")</p>
+                                            </div>
+                                        }
+
+                                        <form asp-action="UploadTopicFile" asp-route-id="@topic.Id" method="post" enctype="multipart/form-data" class="topic-file-upload">
+                                            @Html.AntiForgeryToken()
+                                            <div class="topics-field">
+                                                <label for="@($"topicFile-{topic.Id}")">@T.T("Add file")</label>
+                                                <input id="@($"topicFile-{topic.Id}")" name="topicFile" type="file" accept=".pdf,.docx,.zip,.png,.jpg,.jpeg" required />
+                                                <span class="topics-help">@T.T("Supported files: PDF, DOCX, ZIP, PNG, JPG.")</span>
+                                            </div>
+                                            <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Upload file")</button>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer task-modal__footer">
+                                        <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Close")</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<div class="modal fade task-modal create-modal add-topic-modal" id="addBatchTopicsModal" tabindex="-1" aria-labelledby="addBatchTopicsModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="AddTopic" asp-route-batchId="@Model.Id" method="post" enctype="multipart/form-data" data-add-topic-form>
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <div>
+                        <p class="dashboard-kicker">Topics</p>
+                        <h3 class="modal-title" id="addBatchTopicsModalTitle">Add Topics</h3>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body add-topic-modal__body">
+                    <div class="add-topic-mode" role="radiogroup" aria-label="Choose topic add mode">
+                        <label class="add-topic-mode__option">
+                            <input type="radio" name="topicAddMode" value="single" checked data-add-topic-mode />
+                            <span>@T.T("One topic")</span>
+                        </label>
+                        <label class="add-topic-mode__option">
+                            <input type="radio" name="topicAddMode" value="multiple" data-add-topic-mode />
+                            <span>@T.T("Multiple topics")</span>
+                        </label>
+                    </div>
+
+                    <div class="topics-field" data-add-topic-panel="single">
+                        <label for="singleTopicTitle">@T.T("Topic title")</label>
+                        <input id="singleTopicTitle" name="title" maxlength="200" placeholder="@T.T("Enter topic title")" required data-single-topic-input />
+                        <label for="singleTopicFile">@T.T("Topic file optional")</label>
+                        <input id="singleTopicFile" name="topicFile" type="file" accept=".pdf,.docx,.zip,.png,.jpg,.jpeg" data-single-topic-file />
+                        <span class="topics-help">@T.T("Attach one supporting file to this topic only. Supported files: PDF, DOCX, ZIP, PNG, JPG.")</span>
+                    </div>
+
+                    <div class="topics-field" data-add-topic-panel="multiple" hidden>
+                        <label for="multipleTopicTitles">@T.T("Topic titles")</label>
+                        <textarea id="multipleTopicTitles" name="topicsText" rows="7" placeholder="@T.T("Write one topic per line")" disabled data-multiple-topic-input></textarea>
+                        <span class="topics-help">@T.T("Each line will be added as a separate topic.")</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer task-modal__footer">
+                    <button type="button" class="dashboard-card__button" data-bs-dismiss="modal">@T.T("Cancel")</button>
+                    <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Add Topics")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const filter = document.querySelector('[data-topic-management-filter]');
+            const rows = [...document.querySelectorAll('[data-topic-row]')];
+
+            if (!filter || rows.length === 0) {
+                return;
+            }
+
+            const searchInput = filter.querySelector('[data-topic-search]');
+            const statusInput = filter.querySelector('[data-topic-status-filter]');
+
+            const applyFilters = () => {
+                const query = (searchInput?.value || '').trim().toLowerCase();
+                const status = statusInput?.value || '';
+
+                rows.forEach(row => {
+                    const matchesSearch = !query || row.dataset.topicTitle.includes(query);
+                    const matchesStatus = !status || row.dataset.topicStatus === status;
+                    row.hidden = !(matchesSearch && matchesStatus);
+                });
+            };
+
+            filter.addEventListener('input', applyFilters);
+            filter.addEventListener('change', applyFilters);
+            filter.addEventListener('reset', () => window.setTimeout(applyFilters, 0));
+        })();
+
+        (() => {
+            const form = document.querySelector('[data-add-topic-form]');
+
+            if (!form) {
+                return;
+            }
+
+            const modes = [...form.querySelectorAll('[data-add-topic-mode]')];
+            const singlePanel = form.querySelector('[data-add-topic-panel="single"]');
+            const multiplePanel = form.querySelector('[data-add-topic-panel="multiple"]');
+            const singleInput = form.querySelector('[data-single-topic-input]');
+            const singleFileInput = form.querySelector('[data-single-topic-file]');
+            const multipleInput = form.querySelector('[data-multiple-topic-input]');
+
+            const syncMode = () => {
+                const mode = modes.find(item => item.checked)?.value || 'single';
+                const isMultiple = mode === 'multiple';
+
+                singlePanel.hidden = isMultiple;
+                multiplePanel.hidden = !isMultiple;
+                singleInput.disabled = isMultiple;
+                singleInput.required = !isMultiple;
+                singleFileInput.disabled = isMultiple;
+                multipleInput.disabled = !isMultiple;
+                multipleInput.required = isMultiple;
+            };
+
+            modes.forEach(mode => mode.addEventListener('change', syncMode));
+            syncMode();
+        })();
+    </script>
+}

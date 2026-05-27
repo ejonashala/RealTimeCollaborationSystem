@@ -1,0 +1,153 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+@model DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var isProfessor = Model.IsProfessor;
+    var overviewStatLabels = isProfessor
+        ? new[] { "Published groups", "Total topics", "Pending submissions", "Upcoming deadlines" }
+        : new[] { "Selected topics", "Assigned tasks", "Pending tasks", "Upcoming deadlines" };
+    var overviewStats = Model.Stats
+        .Where(stat => overviewStatLabels.Contains(stat.Label))
+        .ToList();
+
+    if (!overviewStats.Any())
+    {
+        overviewStats = Model.Stats.Take(4).ToList();
+    }
+}
+
+@if (TempData["BatchError"] is string batchError)
+{
+    <div class="alert alert-danger" role="alert">@batchError</div>
+}
+
+@if (TempData["DashboardError"] is string dashboardError)
+{
+    <div class="alert alert-danger" role="alert">@dashboardError</div>
+}
+
+<section class="dashboard-stat-grid" aria-label="Dashboard statistics">
+    @foreach (var stat in overviewStats)
+    {
+        <article class="dashboard-stat dashboard-stat--@stat.Tone">
+            <span>@stat.Label</span>
+            <strong>@stat.Value</strong>
+            <p>@stat.Hint</p>
+        </article>
+    }
+</section>
+
+<section class="dashboard-overview-layout">
+    <div class="dashboard-overview-main">
+        @if (!isProfessor)
+        {
+            <article class="dashboard-panel">
+                <div class="dashboard-panel__head">
+                    <div>
+                        <p class="dashboard-kicker">@T.T("Project Topics")</p>
+                        <h3>@T.T("Selected Topic")</h3>
+                    </div>
+                    <a asp-controller="StudentTopics" asp-action="Index">@T.T("Manage topics")</a>
+                </div>
+
+                @if (!Model.SelectedTopics.Any())
+                {
+                    <div class="dashboard-empty">
+                        <h4>@T.T("No topic selected")</h4>
+                        <p>@T.T("Select a topic to show it here.")</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="dashboard-topic-list">
+                        @foreach (var topic in Model.SelectedTopics)
+                        {
+                            <div class="dashboard-topic-item">
+                                <div>
+                                    <strong>@topic.Title</strong>
+                                    <span>@topic.GroupName · @topic.ProfessorName</span>
+                                </div>
+                                @if (topic.SelectedAt.HasValue)
+                                {
+                                    <time>@topic.SelectedAt.Value.ToString("yyyy-MM-dd HH:mm")</time>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </article>
+        }
+
+        <article class="dashboard-panel">
+            <div class="dashboard-panel__head">
+                <div>
+                    <p class="dashboard-kicker">Deadlines</p>
+                    <h3>@T.T("Upcoming Deadlines")</h3>
+                </div>
+                <a asp-controller="@(isProfessor ? "ProfessorTasks" : "StudentTasks")" asp-action="Index">@T.T("Manage tasks")</a>
+            </div>
+
+            @if (!Model.UpcomingDeadlines.Any())
+            {
+                <div class="dashboard-empty">
+                    <h4>@T.T("No upcoming deadlines")</h4>
+                    <p>@T.T("Future task deadlines will appear here.")</p>
+                </div>
+            }
+            else
+            {
+                <div class="dashboard-deadline-list">
+                    @foreach (var deadline in Model.UpcomingDeadlines)
+                    {
+                        <div class="dashboard-deadline">
+                            <div class="dashboard-deadline__date">
+                                <strong>@deadline.DueAt.ToString("dd")</strong>
+                                <span>@deadline.DueAt.ToString("MMM")</span>
+                            </div>
+                            <div>
+                                <strong>@deadline.Title</strong>
+                                <span>@deadline.Subtitle</span>
+                            </div>
+                            <span class="dashboard-deadline__status">@deadline.Status</span>
+                        </div>
+                    }
+                </div>
+            }
+        </article>
+
+        <article class="dashboard-panel dashboard-panel--activity">
+            <div class="dashboard-panel__head">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Activity")</p>
+                    <h3>@T.T("Recent Activity")</h3>
+                </div>
+            </div>
+
+            @if (!Model.RecentActivity.Any())
+            {
+                <div class="dashboard-empty">
+                    <h4>@T.T("No recent activity")</h4>
+                    <p>@T.T("New submissions, topic selections, and feedback updates will appear here.")</p>
+                </div>
+            }
+            else
+            {
+                <div class="dashboard-activity-list">
+                    @foreach (var activity in Model.RecentActivity)
+                    {
+                        <div class="dashboard-activity dashboard-activity--@activity.Tone">
+                            <span class="dashboard-activity__dot" aria-hidden="true"></span>
+                            <div>
+                                <strong>@activity.Title</strong>
+                                <p>@activity.Detail</p>
+                                <time>@activity.OccurredAt.ToString("yyyy-MM-dd HH:mm")</time>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </article>
+    </div>
+</section>

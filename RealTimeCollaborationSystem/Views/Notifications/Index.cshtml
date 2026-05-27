@@ -1,0 +1,172 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@model NotificationsViewModel
+
+@{
+    ViewData["Title"] = T.T("Notifications");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead notifications-head">
+    <div>
+        <p class="dashboard-kicker">@T.T("System updates")</p>
+        <h2>@T.T("Notifications")</h2>
+        <p class="dashboard-lead">@T.T("Important updates about groups, tasks, deadlines, and feedback.")</p>
+    </div>
+</section>
+
+@if (TempData["NotificationSuccess"] is string successMessage)
+{
+    <div class="notification-alert notification-alert--success">@successMessage</div>
+}
+
+@if (TempData["NotificationError"] is string errorMessage)
+{
+    <div class="notification-alert notification-alert--error">@errorMessage</div>
+}
+
+@if (Model.IsProfessor)
+{
+    <section class="notifications-panel">
+        <div class="notifications-panel__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Group invitation")</p>
+                <h3>@T.T("Invite a student")</h3>
+            </div>
+        </div>
+
+        <form class="notification-invite-form" asp-action="InviteToGroup" method="post">
+            @Html.AntiForgeryToken()
+
+            <label>
+                <span>@T.T("Student")</span>
+                <select name="studentId" required>
+                    <option value="">@T.T("Select student")</option>
+                    @foreach (var student in Model.Students)
+                    {
+                        <option value="@student.Value">@student.Text</option>
+                    }
+                </select>
+            </label>
+
+            <label>
+                <span>@T.T("Topic group")</span>
+                <select name="topicId" required>
+                    <option value="">@T.T("Select available topic")</option>
+                    @foreach (var topic in Model.Topics)
+                    {
+                        <option value="@topic.Value">@topic.Text</option>
+                    }
+                </select>
+            </label>
+
+            <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Send invitation")</button>
+        </form>
+    </section>
+
+    <section class="notifications-panel">
+        <div class="notifications-panel__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Invitation status")</p>
+                <h3>@T.T("Sent invitations")</h3>
+            </div>
+        </div>
+
+        @if (!Model.SentInvitations.Any())
+        {
+            <div class="notifications-empty">
+                <h4>@T.T("No invitations sent")</h4>
+                <p>@T.T("Group invitations and their status will appear here.")</p>
+            </div>
+        }
+        else
+        {
+            <div class="notification-list">
+                @foreach (var invitation in Model.SentInvitations)
+                {
+                    <article class="notification-card">
+                        <div>
+                            <strong>@T.T(invitation.Topic?.Title ?? T.T("Group invitation"))</strong>
+                            <p>
+                                @(invitation.RecipientUser == null
+                                    ? T.T("Student")
+                                    : string.IsNullOrWhiteSpace(invitation.RecipientUser.Name)
+                                        ? invitation.RecipientUser.Email
+                                        : $"{invitation.RecipientUser.Name} ({invitation.RecipientUser.Email})")
+                            </p>
+                            <time>@invitation.CreatedAt.ToString("yyyy-MM-dd HH:mm")</time>
+                        </div>
+                        <span class="notification-status notification-status--@(invitation.InvitationStatus?.ToLowerInvariant() ?? T.T("pending"))">
+                        
+                            @(string.IsNullOrWhiteSpace(invitation.InvitationStatus)
+                                            ? T.T("Pending")
+                                            : T.T(invitation.InvitationStatus))
+                        </span>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+}
+
+<section class="notifications-panel">
+    <div class="notifications-panel__head">
+        <div>
+            <p class="dashboard-kicker">@T.T("Updates")</p>
+            <h3>@T.T("Important notifications")</h3>
+        </div>
+    </div>
+
+    @if (!Model.Notifications.Any())
+    {
+        <div class="notifications-empty">
+            <h4>@T.T("No notifications")</h4>
+            <p>@T.T("Important system updates will appear here.")</p>
+        </div>
+    }
+    else
+    {
+        <div class="notification-list">
+            @foreach (var notification in Model.Notifications)
+            {
+                <article class="notification-card notification-card--@notification.Type.ToLowerInvariant()">
+                    <a class="notification-card__link" href="@(string.IsNullOrWhiteSpace(notification.NavigationUrl) ? Url.Action("Index", "Notifications") : notification.NavigationUrl)">
+                        <div>
+                            <strong>@notification.Title</strong>
+                            <p>@notification.Message</p>
+                            <time>@notification.CreatedAt.ToString("yyyy-MM-dd HH:mm")</time>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(notification.InvitationStatus))
+                        {
+                            <span class="notification-status notification-status--@notification.InvitationStatus.ToLowerInvariant()">@notification.InvitationStatus</span>
+                        }
+                        else
+                        {
+                            <span class="notification-status">@notification.Status</span>
+                        }
+                    </a>
+
+                    @if (notification.RequiresResponse && notification.Id.HasValue)
+                    {
+                        <div class="notification-actions">
+                            <form asp-action="AcceptInvitation" asp-route-id="@notification.Id.Value" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Accept")</button>
+                            </form>
+
+                            <form asp-action="DeclineInvitation" asp-route-id="@notification.Id.Value" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dashboard-card__button">@T.T("Decline")</button>
+                            </form>
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+    }
+</section>

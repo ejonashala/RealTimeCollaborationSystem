@@ -1,0 +1,299 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Dashboard";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    var pageTitle = ViewData["Title"]?.ToString();
+    var fullTitle = string.IsNullOrWhiteSpace(pageTitle) ? "Dashboard - CollabSpace" : $"{pageTitle} - CollabSpace";
+    var userName = Context.Session.GetString("UserName") ?? "CollabSpace User";
+    var photoUrl = Context.Session.GetString("PhotoUrl") ?? "/images/users/default-avatar.svg";
+    var currentTheme = Context.Session.GetString("Theme") ?? "light";
+    var userRole = Context.Session.GetString("UserRole") ?? string.Empty;
+    var isProfessor = string.Equals(userRole, "Professor", StringComparison.OrdinalIgnoreCase);
+    var isStudent = string.Equals(userRole, "Student", StringComparison.OrdinalIgnoreCase);
+    var isStudentTopicsSection = isStudent && string.Equals(currentController, "StudentTopics", StringComparison.OrdinalIgnoreCase);
+    var isStudentTasksSection = isStudent && string.Equals(currentController, "StudentTasks", StringComparison.OrdinalIgnoreCase);
+
+    string NavClass(string controllerName, string actionName) =>
+        string.Equals(currentController, controllerName, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(currentAction, actionName, StringComparison.OrdinalIgnoreCase)
+            ? "dashboard-nav__link dashboard-nav__link--active"
+            : "dashboard-nav__link";
+
+    string SubNavClass(string controllerName, string actionName) =>
+        string.Equals(currentController, controllerName, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(currentAction, actionName, StringComparison.OrdinalIgnoreCase)
+            ? "dashboard-nav__sub-link dashboard-nav__sub-link--active"
+            : "dashboard-nav__sub-link";
+
+    string NavClassByController(string controllerName) =>
+        string.Equals(currentController, controllerName, StringComparison.OrdinalIgnoreCase)
+            ? "dashboard-nav__link dashboard-nav__link--active"
+            : "dashboard-nav__link";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@fullTitle</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/photo-modal.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body class="dashboard-body @(currentTheme == "dark" ? "dashboard-theme--dark" : "dashboard-theme--light")">
+    <div class="dashboard-backdrop"></div>
+    <div class="dashboard-shell">
+        <aside class="dashboard-sidebar" id="dashboardSidebar">
+            <div class="dashboard-brand">
+                <div class="dashboard-brand__identity">
+                    <div class="dashboard-brand__mark">C</div>
+                    <div>
+                        <p class="dashboard-brand__eyebrow">@T.T("Workspace")</p>
+                        <h1 class="dashboard-brand__title">CollabSpace</h1>
+                    </div>
+                </div>
+
+                <button type="button" class="dashboard-menu-toggle dashboard-menu-toggle--sidebar" 
+                data-sidebar-toggle aria-label="Toggle menu" aria-controls="dashboardSidebar" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+
+            <button type="button" class="dashboard-usercard" 
+            data-photo-modal-open aria-label="Manage profile photo">
+                <img class="dashboard-usercard__avatar" 
+                data-session-photo src="@photoUrl" alt="@userName profile photo" 
+                onerror="this.onerror=null;this.src='/images/users/default-avatar.svg';" />
+                <strong>@userName</strong>
+            </button>
+
+            <nav class="dashboard-nav" aria-label="Dashboard navigation">
+                <div class="dashboard-nav__section">
+                    <a class="@NavClass("Dashboard", "Index")" asp-controller="Dashboard" asp-action="Index">
+                        <span class="dashboard-nav__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M4 12.5 12 5l8 7.5">
+                            </path><path d="M6.5 10.5V19h11v-8.5"></path></svg>
+                        </span>
+                        <span>@T.T("Dashboard")</span>
+                    </a>
+                </div>
+
+                @if (isProfessor)
+                {
+                    <div class="dashboard-nav__section">
+                        <a class="@NavClassByController("ProfessorTopics")" 
+                            asp-controller="ProfessorTopics" asp-action="Index">
+                            <span class="dashboard-nav__icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M4.5 7.5h15">
+                                </path><path d="M4.5 12h15"></path><path d="M4.5 16.5h9"></path></svg>
+                            </span>
+                            <span>@T.T("Topics")</span>
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="dashboard-nav__section">
+                        <p class="dashboard-nav__label">@T.T("Topics")</p>
+                        <div class="dashboard-nav__group dashboard-nav__group--dropdown" 
+                        data-nav-dropdown>
+                            <button type="button"
+                                    class="dashboard-nav__parent dashboard-nav__parent--button @(isStudentTopicsSection ? "dashboard-nav__parent--active" : "")"
+                                    data-nav-dropdown-toggle
+                                    aria-expanded="false"
+                                    aria-controls="studentTopicsNav">
+                                <span class="dashboard-nav__icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><path d="M4.5 7.5h15"></path><path d="M4.5 12h15"></path><path d="M4.5 16.5h9"></path></svg>
+                                </span>
+                                <span>@T.T("Topics")</span>
+                                <span class="dashboard-nav__chevron" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"></path></svg>
+                                </span>
+                            </button>
+                            <div class="dashboard-nav__sub" id="studentTopicsNav" data-nav-dropdown-menu>
+                                <a class="@SubNavClass("StudentTopics", "Index")" asp-controller="StudentTopics" asp-action="Index">@T.T("Available Topics")</a>
+                                <a class="@SubNavClass("StudentTopics", "MyTopic")" asp-controller="StudentTopics" asp-action="MyTopic">@T.T("My Topic")</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (isProfessor)
+                {
+                    <div class="dashboard-nav__section">
+                        <a class="@NavClassByController("ProfessorTasks")" asp-controller="ProfessorTasks" asp-action="Index">
+                            <span class="dashboard-nav__icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M8.5 7.5h10"></path><path d="M8.5 12h10"></path><path d="M8.5 16.5h10"></path><path d="m4.5 7.5 1.5 1.5 2.5-3"></path><path d="m4.5 12 1.5 1.5 2.5-3"></path><path d="m4.5 16.5 1.5 1.5 2.5-3"></path></svg>
+                            </span>
+                            <span>@T.T("Tasks")</span>
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="dashboard-nav__section">
+                        <a class="@NavClassByController("StudentTasks")" asp-controller="StudentTasks" asp-action="Index">
+                            <span class="dashboard-nav__icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M8.5 7.5h10"></path>
+                                    <path d="M8.5 12h10"></path>
+                                    <path d="M8.5 16.5h10"></path>
+                                    <path d="m4.5 7.5 1.5 1.5 2.5-3"></path>
+                                    <path d="m4.5 12 1.5 1.5 2.5-3"></path>
+                                    <path d="m4.5 16.5 1.5 1.5 2.5-3"></path>
+                                </svg>
+                            </span>
+                            <span>@T.T("Tasks")</span>
+                        </a>
+                    </div>
+                }
+
+                <div class="dashboard-nav__section">
+                    <p class="dashboard-nav__label">Workspace</p>
+                    <a class="@NavClass("Dashboard", "Groups")" asp-controller="Dashboard" asp-action="Groups">
+                        <span class="dashboard-nav__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path><path d="M16 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path><path d="M3.5 19a4.5 4.5 0 0 1 9 0"></path><path d="M13.5 18.5a3.5 3.5 0 0 1 7 0"></path></svg>
+                        </span>
+                        <span>@T.T("Groups")</span>
+                    </a>
+                    <a class="@NavClassByController("Settings")" asp-controller="Settings" asp-action="Index">
+                        <span class="dashboard-nav__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="m12 3 1.5 2.7 3.1.6-.8 3 2.2 2.1-2.2 2.1.8 3-3.1.6L12 20l-1.5-2.7-3.1-.6.8-3L6 11.5l2.2-2.1-.8-3 3.1-.6L12 3Z"></path><circle cx="12" cy="11.5" r="2.6"></circle></svg>
+                        </span>
+                        <span>@T.T("Settings")</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="dashboard-sidebar__footer">
+                <a class="dashboard-sidebar__logout" asp-controller="Account" asp-action="Logout">@T.T("Log out")</a>
+            </div>
+        </aside>
+
+        <div class="dashboard-content">
+            <header class="dashboard-mobilebar">
+                <button type="button" class="dashboard-menu-toggle" data-sidebar-toggle aria-label="Open menu" aria-controls="dashboardSidebar" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <div class="dashboard-mobilebar__brand">
+                    <strong>CollabSpace</strong>
+                    @(string.IsNullOrWhiteSpace(pageTitle) ? T.T("Dashboard") : pageTitle)
+                </div>
+            </header>
+
+            <header class="dashboard-topbar">
+                <div class="dashboard-topbar__title">
+                    <span>@userRole</span>
+                    <strong>@(string.IsNullOrWhiteSpace(pageTitle) ? T.T("Dashboard") : pageTitle)</strong>
+                </div>
+
+                <div class="dashboard-topbar__actions">
+                    <div class="dropdown notification-dropdown" data-notification-dropdown data-user-role="@userRole">
+                        <button class="dashboard-icon-button notification-bell" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10.5a5.5 5.5 0 0 1 11 0v2.7l1.5 2.3h-14l1.5-2.3v-2.7Z"></path><path d="M9.8 18.2a2.4 2.4 0 0 0 4.4 0"></path></svg>
+                            <span class="notification-bell__badge" data-notification-count hidden>0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end notification-menu" data-bs-auto-close="outside">
+                            <div class="notification-menu__head">
+                                <strong>@T.T("Notifications")</strong>
+                                <span data-notification-state>@T.T("Loading")</span>
+                            </div>
+                            <div class="notification-menu__list" data-notification-list>
+                                <div class="notification-menu__empty">@T.T("Loading updates...")</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="notification-token" hidden>
+                        @Html.AntiForgeryToken()
+                    </div>
+
+                </div>
+            </header>
+
+            <main class="dashboard-main" role="main">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <partial name="_ProfilePhotoModal" />
+    <partial name="_DeleteConfirmationModal" />
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (() => {
+            const body = document.body;
+            const sidebar = document.getElementById('dashboardSidebar');
+            const toggleButtons = document.querySelectorAll('[data-sidebar-toggle]');
+            const mobileQuery = window.matchMedia('(max-width: 768px)');
+
+            if (!sidebar || toggleButtons.length === 0) {
+                return;
+            }
+
+            const setSidebarState = (isOpen) => {
+                body.classList.toggle('sidebar-open', isOpen);
+                sidebar.classList.toggle('open', isOpen);
+
+                toggleButtons.forEach(button => {
+                    button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                });
+            };
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (!mobileQuery.matches) {
+                        return;
+                    }
+
+                    const isOpen = !body.classList.contains('sidebar-open');
+                    setSidebarState(isOpen);
+                });
+            });
+
+            const handleViewportChange = (event) => {
+                if (!event.matches) {
+                    setSidebarState(false);
+                }
+            };
+
+            if (typeof mobileQuery.addEventListener === 'function') {
+                mobileQuery.addEventListener('change', handleViewportChange);
+            } else if (typeof mobileQuery.addListener === 'function') {
+                mobileQuery.addListener(handleViewportChange);
+            }
+        })();
+    </script>
+    <script>
+        (() => {
+            document.querySelectorAll('[data-nav-dropdown]').forEach(dropdown => {
+                const toggle = dropdown.querySelector('[data-nav-dropdown-toggle]');
+                const menu = dropdown.querySelector('[data-nav-dropdown-menu]');
+
+                if (!toggle || !menu) {
+                    return;
+                }
+
+                toggle.addEventListener('click', () => {
+                    const isOpen = dropdown.classList.toggle('is-open');
+                    toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                });
+            });
+        })();
+    </script>
+    <script src="~/js/profile-photo-modal.js" asp-append-version="true"></script>
+    <script src="~/js/notifications-dropdown.js" asp-append-version="true"></script>
+    <script src="~/js/delete-confirmation.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

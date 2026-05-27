@@ -1,0 +1,81 @@
+@model RealTimeCollaborationSystem.Models.TopicBatch
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = @T.T("Create Batch");
+    var topicsText = ViewBag.TopicsText as string ?? string.Empty;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/professor-topics.css" asp-append-version="true" />
+}
+
+<section class="dashboard-pagehead topics-head">
+    <div>
+        <p class="dashboard-kicker">@T.T("Professor")</p>
+        <h2>@T.T("Create Batch")</h2>
+        <p class="dashboard-lead">@T.T("Create a focused topic batch by adding a title and listing topics one per line.")</p>
+    </div>
+</section>
+
+<form asp-action="CreateBatch" method="post" enctype="multipart/form-data" class="topics-upload" data-topic-upload-form>
+    @Html.AntiForgeryToken()
+
+    <section class="topics-upload__form topics-card">
+        <div class="topics-card__head">
+            <div>
+                <p class="dashboard-kicker">@T.T("Topics")</p>
+                <h3>@T.T("Batch details")</h3>
+                <p class="topics-card__text">@T.T("Add a batch name and provide each topic on its own line.")</p>
+            </div>
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="topics-field">
+            <label asp-for="Title">@T.T("Topic batch title")</label>
+            <input asp-for="Title" maxlength="200" data-topic-batch-title />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="topics-field">
+            <label for="topicsText">@T.T("Topics")</label>
+            <textarea id="topicsText" name="topicsText" rows="10" data-topic-lines>@topicsText</textarea>
+            <span class="topics-help">@T.T("Write one topic per line.")</span>
+            @Html.ValidationMessage("TopicsText", "", new { @class = "text-danger" })
+            <p class="topics-error" data-topic-lines-error aria-live="polite"></p>
+        </div>
+
+        <div class="topics-actions topics-actions--end">
+            <a asp-action="Index" class="dashboard-card__button">@T.T("Cancel")</a>
+            <button type="submit" class="dashboard-card__button dashboard-card__button--primary">@T.T("Create Batch")</button>
+        </div>
+    </section>
+
+    <aside class="topic-preview-panel topic-preview-panel--inline" data-topic-preview-panel aria-live="polite" aria-hidden="true">
+        <div class="topic-preview-panel__dialog">
+            <div class="topics-card__head">
+                <div>
+                    <p class="dashboard-kicker">@T.T("Preview")</p>
+                    <h3>@T.T("Review before saving")</h3>
+                    <p class="topics-card__text" data-topic-preview-count>@T.T("No topics yet")</p>
+                </div>
+            </div>
+
+            <div class="topics-empty topics-preview__empty" data-topic-preview-empty>
+                <h4>@T.T("No topics to preview")</h4>
+                <p>@T.T("Paste topics to see the list here.")</p>
+            </div>
+
+            <ol class="topics-preview__list" data-topic-preview-list></ol>
+        </div>
+    </aside>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="~/js/professor-topic-upload.js" asp-append-version="true"></script>
+}

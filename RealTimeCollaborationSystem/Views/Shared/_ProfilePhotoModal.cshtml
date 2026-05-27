@@ -1,0 +1,57 @@
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+
+    const string defaultPhoto = "/images/users/default-avatar.svg";
+
+    var photoName = ViewData["PhotoName"]?.ToString()
+
+        ?? Context.Session.GetString("UserName")
+
+        ?? T.T("CollabSpace User");
+
+    var photoUrl = ViewData["PhotoUrl"]?.ToString()
+        ?? Context.Session.GetString("PhotoUrl")
+        ?? defaultPhoto;
+
+    var hasPhoto = ViewData["HasPhoto"] is bool value
+        ? value
+        : !string.Equals(photoUrl.Split('?')[0], defaultPhoto, StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="profile-modal-overlay" id="profilePhotoModal" aria-hidden="true">
+    <div class="profile-modal-box" role="dialog" aria-modal="true" aria-labelledby="profilePhotoTitle">
+        <button type="button" class="profile-modal-close" data-photo-modal-close aria-label="aria-label="@T.T("Close photo modal")">&times;</button>
+
+        <div class="profile-modal-header">
+            <div>
+                <p class="dashboard-kicker">@T.T("Profile Photo")</p>
+                <h3 id="profilePhotoTitle">@T.T("Update your account image")</h3>
+                <p class="profile-modal-text">@T.T("Choose a new image from your device or reset back to the default profile picture.")</p>
+            </div>
+            <img class="profile-modal-preview" data-session-photo src="@photoUrl" alt="@($"{photoName} {T.T("current profile photo")}")" " onerror="this.onerror=null;this.src='@defaultPhoto';" />
+        </div>
+
+        <form asp-controller="Profile" asp-action="UpdatePhoto" method="post" enctype="multipart/form-data" class="profile-modal-form">
+            @Html.AntiForgeryToken()
+
+            <label class="profile-file-picker" for="photoFile">
+                <span class="profile-file-picker__title">@T.T("Choose image")</span>
+                <span class="profile-file-picker__text" id="photoFileName">@T.T("JPG, PNG, GIF, or WEBP up to 5 MB.")</span>
+            </label>
+            <input id="photoFile" name="photoFile" type="file" accept="image/*" class="profile-file-input" />
+
+            <div class="profile-modal-actions">
+                <button type="submit" class="profile-action">@T.T("Upload Photo")</button>
+
+                @if (hasPhoto)
+                {
+                    <button type="submit" formaction="@Url.Action("ResetPhoto", "Profile")" formmethod="post" class="profile-action profile-action--ghost">@T.T("Reset to Default")</button>
+                }
+
+                <a class="profile-modal-link" asp-controller="Settings" asp-action="Index">@T.T("Account settings")</a>
+            </div>
+        </form>
+    </div>
+</div>

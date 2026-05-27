@@ -1,0 +1,72 @@
+@model RealTimeCollaborationSystem.Models.Dtos.UserLoginDto
+
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_AuthLayout";
+}
+
+<link rel="stylesheet" href="~/css/login.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+<div class="login-container">
+    <div class="login-box login-box--login">
+        <div class="login-header">
+            <h1>CollabSpace</h1>
+            <p>Welcome back</p>
+        </div>
+
+        <form asp-action="Login" method="post" novalidate class="auth-form auth-form--login">
+            @Html.AntiForgeryToken()
+
+            <div class="input-group">
+                <label><i class="fa fa-envelope"></i> Email</label>
+                <input asp-for="Email" placeholder="Enter your email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="input-group">
+                <label><i class="fa fa-lock"></i> Password</label>
+
+                <div class="password-box">
+                    <input asp-for="Password" placeholder="Enter your password" />
+                    <i class="fa fa-eye-slash eye-toggle" data-target="Password"></i>
+                </div>
+
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="login-error" asp-validation-summary="ModelOnly"></div>
+
+            <button type="submit" class="login-btn">Log In</button>
+
+        </form>
+
+        <p class="signup-link">
+            Don't have an account?
+            <a href="/Account/Register">Create account</a>
+        </p>
+
+        <p class="login-footer">
+            Forgot your password?
+            <a asp-controller="Account" asp-action="ForgotPassword">Reset it</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".eye-toggle").forEach(icon => {
+                icon.addEventListener("click", function () {
+                    const input = document.getElementById(this.dataset.target);
+                    const show = input.type === "password";
+                    input.type = show ? "text" : "password";
+
+                    this.classList.toggle("fa-eye");
+                    this.classList.toggle("fa-eye-slash");
+                });
+            });
+        });
+    </script>
+}
+
