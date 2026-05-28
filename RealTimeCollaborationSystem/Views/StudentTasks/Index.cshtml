@@ -144,7 +144,7 @@ else
                             @if (isReviewed)
                             {
                                 <div class="task-reviewed-panel">
-                                    <span>Professor feedback</span>
+                                    <span>@T.T("Professor feedback")</span>
                                     @if (!string.IsNullOrWhiteSpace(submission.Feedback))
                                     {
                                         <p>@submission.Feedback</p>
@@ -190,7 +190,7 @@ else
 
                                         <div class="modal-header">
                                             <div>
-                                                <p class="dashboard-kicker">Student Task</p>
+                                                <p class="dashboard-kicker">@T.T("Student Task")</p>
                                                 <h3 class="modal-title" id="@($"{submitModalId}Title")">@(submission == null ? @T.T("Submit Work") : @T.T("Update Submission"))</h3>
                                             </div>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -209,7 +209,7 @@ else
                                             </div>
 
                                             <div class="topics-field">
-                                                <label for="@commentInputId">Comment optional</label>
+                                                <label for="@commentInputId">@T.T("Comment optional")</label>
                                                 <textarea id="@commentInputId" name="studentComment" rows="4" maxlength="1000" placeholder="@T.T("Add a short note for the professor")">@submission?.StudentComment</textarea>
                                             </div>
                                         </div>

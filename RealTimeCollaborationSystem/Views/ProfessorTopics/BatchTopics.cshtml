@@ -45,7 +45,7 @@
     </article>
 
     <article class="topics-info">
-        <span class="topics-info__label">Created At</span>
+        <span class="topics-info__label">@T.T("Created At")</span>
         <strong>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</strong>
     </article>
 
@@ -83,7 +83,7 @@
     {
         <form class="management-toolbar" data-topic-management-filter>
             <div class="topics-field">
-                <label for="batchTopicSearch">Search</label>
+                <label for="batchTopicSearch">@T.T("Search")</label>
                 <input id="batchTopicSearch" type="search" placeholder="@T.T("Search topic title")" data-topic-search />
             </div>
             <div class="topics-field">
@@ -134,13 +134,13 @@
                             <td><strong class="management-title">@topic.Title</strong></td>
                             <td>
                                 <span class="topics-badge @(isTaken ? "topics-badge--taken" : "topics-badge--available")">
-                                    @statusText
+                                    @T.T(statusText)
                                 </span>
                             </td>
                             <td>@selectedBy</td>
                             <td>
                                 <span class="topics-badge @(files.Any() ? "topics-badge--active" : "topics-badge--pending")">
-                                    @files.Count file@(files.Count == 1 ? "" : "s")
+                                    @files.Count @(files.Count == 1 ? T.T("file") : T.T("files"))
                                 </span>
                             </td>
                             <td class="topics-table__actions">
@@ -254,8 +254,8 @@
 
                 <div class="modal-header">
                     <div>
-                        <p class="dashboard-kicker">Topics</p>
-                        <h3 class="modal-title" id="addBatchTopicsModalTitle">Add Topics</h3>
+                        <p class="dashboard-kicker">@T.T("Topics")</p>
+                        <h3 class="modal-title" id="addBatchTopicsModalTitle">@T.T("Add Topics")</h3>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>

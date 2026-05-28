@@ -8,6 +8,7 @@
     var userName = Context.Session.GetString("UserName") ?? "CollabSpace User";
     var photoUrl = Context.Session.GetString("PhotoUrl") ?? "/images/users/default-avatar.svg";
     var currentTheme = Context.Session.GetString("Theme") ?? "light";
+    var currentLanguage = T.CurrentLanguage();
     var userRole = Context.Session.GetString("UserRole") ?? string.Empty;
     var isProfessor = string.Equals(userRole, "Professor", StringComparison.OrdinalIgnoreCase);
     var isStudent = string.Equals(userRole, "Student", StringComparison.OrdinalIgnoreCase);
@@ -33,7 +34,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@currentLanguage">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -155,7 +156,7 @@
                 }
 
                 <div class="dashboard-nav__section">
-                    <p class="dashboard-nav__label">Workspace</p>
+                    <p class="dashboard-nav__label">@T.T("Workspace")</p>
                     <a class="@NavClass("Dashboard", "Groups")" asp-controller="Dashboard" asp-action="Groups">
                         <span class="dashboard-nav__icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24"><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path><path d="M16 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path><path d="M3.5 19a4.5 4.5 0 0 1 9 0"></path><path d="M13.5 18.5a3.5 3.5 0 0 1 7 0"></path></svg>

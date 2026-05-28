@@ -236,10 +236,18 @@ namespace RealTimeCollaborationSystem.Controllers
             );
             HttpContext.Session.SetString(
                 "Language",
-                string.IsNullOrWhiteSpace(user.Language)
-                    ? "sq"
-            :       user.Language
+                NormalizeLanguage(user.Language)
             );
+        }
+
+        private static string NormalizeLanguage(string? language)
+        {
+            if (string.Equals(language, "en", StringComparison.OrdinalIgnoreCase))
+            {
+                return "en";
+            }
+
+            return "sq";
         }
 
         private static string ResolveSessionPhotoUrl(User user)

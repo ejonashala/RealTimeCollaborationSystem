@@ -1,20 +1,26 @@
 ﻿using RealTimeCollaborationSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using RealTimeCollaborationSystem.Data;
 
 namespace RealTimeCollaborationSystem.Services
 {
     public class TranslationService : ITranslationService
     {
+        private const string DefaultLanguage = "sq";
+        private const string LanguageCacheKey = "CurrentLanguage";
         private readonly IHttpContextAccessor _http;
+        private readonly AppDbContext _db;
 
-        public TranslationService(IHttpContextAccessor http)
+        public TranslationService(IHttpContextAccessor http, AppDbContext db)
         {
             _http = http;
+            _db = db;
         }
 
         public string T(string key)
         {
-            var lang = _http.HttpContext?.Session.GetString("Language") ?? "en";
+            var lang = CurrentLanguage();
 
             return lang switch
             {
@@ -22,6 +28,75 @@ namespace RealTimeCollaborationSystem.Services
                 "sq" => Sq.ContainsKey(key) ? Sq[key] : key,
                 _ => Sq.ContainsKey(key) ? Sq[key] : key
             };
+        }
+
+        public string CurrentLanguage()
+        {
+            var httpContext = _http.HttpContext;
+            if (httpContext == null)
+            {
+                return DefaultLanguage;
+            }
+
+            if (httpContext.Items.TryGetValue(LanguageCacheKey, out var cachedLanguage)
+                && cachedLanguage is string cached
+                && NormalizeLanguage(cached) is string normalizedCached)
+            {
+                return normalizedCached;
+            }
+
+            var sessionLanguage = NormalizeLanguage(httpContext.Session.GetString("Language"));
+            if (sessionLanguage != null)
+            {
+                return CacheLanguage(httpContext, sessionLanguage);
+            }
+
+            var userLanguage = GetLoggedInUserLanguage(httpContext);
+            if (userLanguage != null)
+            {
+                httpContext.Session.SetString("Language", userLanguage);
+                return CacheLanguage(httpContext, userLanguage);
+            }
+
+            return CacheLanguage(httpContext, DefaultLanguage);
+        }
+
+        private string? GetLoggedInUserLanguage(HttpContext httpContext)
+        {
+            var userIdRaw = httpContext.Session.GetString("UserId");
+            if (!int.TryParse(userIdRaw, out var userId))
+            {
+                return null;
+            }
+
+            var language = _db.Users
+                .AsNoTracking()
+                .Where(user => user.Id == userId)
+                .Select(user => user.Language)
+                .FirstOrDefault();
+
+            return NormalizeLanguage(language);
+        }
+
+        private static string CacheLanguage(HttpContext httpContext, string language)
+        {
+            httpContext.Items[LanguageCacheKey] = language;
+            return language;
+        }
+
+        private static string? NormalizeLanguage(string? language)
+        {
+            if (string.Equals(language, "sq", StringComparison.OrdinalIgnoreCase))
+            {
+                return "sq";
+            }
+
+            if (string.Equals(language, "en", StringComparison.OrdinalIgnoreCase))
+            {
+                return "en";
+            }
+
+            return null;
         }
 
         private static readonly Dictionary<string, string> Sq = new()
@@ -33,6 +108,29 @@ namespace RealTimeCollaborationSystem.Services
 
             ["Login"] = "Kyçu",
             ["Register"] = "Regjistrohu",
+            ["Welcome back"] = "Mirë se u ktheve",
+            ["Name"] = "Emri",
+            ["Enter your email"] = "Shkruaj email-in tënd",
+            ["Enter your password"] = "Shkruaj fjalëkalimin tënd",
+            ["Log In"] = "Kyçu",
+            ["Don't have an account?"] = "Nuk ke llogari?",
+            ["Create account"] = "Krijo llogari",
+            ["Forgot your password?"] = "Ke harruar fjalëkalimin?",
+            ["Reset it"] = "Rivendose",
+            ["Create your account"] = "Krijo llogarinë tënde",
+            ["Enter your name"] = "Shkruaj emrin tënd",
+            ["Enter a password"] = "Shkruaj një fjalëkalim",
+            ["Confirm Password"] = "Konfirmo fjalëkalimin",
+            ["Repeat your password"] = "Përsërit fjalëkalimin",
+            ["Create Account"] = "Krijo llogari",
+            ["Already have an account?"] = "Ke tashmë llogari?",
+            ["Log in"] = "Kyçu",
+            ["Reset your password"] = "Rivendos fjalëkalimin",
+            ["Continue"] = "Vazhdo",
+            ["Back to Login"] = "Kthehu te kyçja",
+            ["Set your new password"] = "Vendos fjalëkalimin e ri",
+            ["Enter your new password"] = "Shkruaj fjalëkalimin e ri",
+            ["Repeat your new password"] = "Përsërit fjalëkalimin e ri",
 
             ["Home"] = "Ballina",
             ["Privacy"] = "Privatësia",
@@ -982,6 +1080,26 @@ namespace RealTimeCollaborationSystem.Services
             ["Loading updates..."] = "Duke ngarkuar përditësimet...",
             ["Professor"] = "Profesori",
             ["Student"] = "Studenti",
+            ["Faculty Projects"] = "Projektet e fakultetit",
+            ["Review groups after you request to join or after your request is accepted."] =
+"Rishiko grupet pasi të kërkosh bashkim ose pasi kërkesa jote të pranohet.",
+            ["Search for professors in Groups and send a join request. Requested or accepted groups will appear here."] =
+"Kërko profesorë te Grupet dhe dërgo kërkesë për bashkim. Grupet e kërkuara ose të pranuara do të shfaqen këtu.",
+            ["Professor not assigned"] = "Profesori nuk është caktuar",
+            ["Open spots"] = "Vende të lira",
+            ["Your request is pending. Topics become active after acceptance."] =
+"Kërkesa jote është në pritje. Temat bëhen aktive pas pranimit.",
+            ["Your group is active. Review your selected topic and available options."] =
+"Grupi yt është aktiv. Rishiko temën e zgjedhur dhe opsionet e disponueshme.",
+            ["Download file"] = "Shkarko file-in",
+            ["Request pending"] = "Kërkesa në pritje",
+            ["This group is visible because you sent a join request. It will become active when the professor accepts you into the group."] =
+"Ky grup është i dukshëm sepse ke dërguar kërkesë për bashkim. Do të bëhet aktiv kur profesori të të pranojë në grup.",
+            ["Already selected"] = "Tashmë e zgjedhur",
+            ["Select Topic"] = "Zgjidh temën",
+            ["Filled"] = "E mbushur",
+            ["file"] = "file",
+            ["files"] = "file",
 
             //delete modal
             ["Permanent Delete"] = "Fshirje e përhershme",
@@ -1400,6 +1518,29 @@ namespace RealTimeCollaborationSystem.Services
 
             ["Login"] = "Login",
             ["Register"] = "Register",
+            ["Welcome back"] = "Welcome back",
+            ["Name"] = "Name",
+            ["Enter your email"] = "Enter your email",
+            ["Enter your password"] = "Enter your password",
+            ["Log In"] = "Log In",
+            ["Don't have an account?"] = "Don't have an account?",
+            ["Create account"] = "Create account",
+            ["Forgot your password?"] = "Forgot your password?",
+            ["Reset it"] = "Reset it",
+            ["Create your account"] = "Create your account",
+            ["Enter your name"] = "Enter your name",
+            ["Enter a password"] = "Enter a password",
+            ["Confirm Password"] = "Confirm Password",
+            ["Repeat your password"] = "Repeat your password",
+            ["Create Account"] = "Create Account",
+            ["Already have an account?"] = "Already have an account?",
+            ["Log in"] = "Log in",
+            ["Reset your password"] = "Reset your password",
+            ["Continue"] = "Continue",
+            ["Back to Login"] = "Back to Login",
+            ["Set your new password"] = "Set your new password",
+            ["Enter your new password"] = "Enter your new password",
+            ["Repeat your new password"] = "Repeat your new password",
 
             ["Home"] = "Home",
             ["Privacy"] = "Privacy",
@@ -2359,6 +2500,26 @@ namespace RealTimeCollaborationSystem.Services
             ["Professor"] = "Professor",
 
             ["Student"] = "Student",
+            ["Faculty Projects"] = "Faculty Projects",
+            ["Review groups after you request to join or after your request is accepted."] =
+"Review groups after you request to join or after your request is accepted.",
+            ["Search for professors in Groups and send a join request. Requested or accepted groups will appear here."] =
+"Search for professors in Groups and send a join request. Requested or accepted groups will appear here.",
+            ["Professor not assigned"] = "Professor not assigned",
+            ["Open spots"] = "Open spots",
+            ["Your request is pending. Topics become active after acceptance."] =
+"Your request is pending. Topics become active after acceptance.",
+            ["Your group is active. Review your selected topic and available options."] =
+"Your group is active. Review your selected topic and available options.",
+            ["Download file"] = "Download file",
+            ["Request pending"] = "Request pending",
+            ["This group is visible because you sent a join request. It will become active when the professor accepts you into the group."] =
+"This group is visible because you sent a join request. It will become active when the professor accepts you into the group.",
+            ["Already selected"] = "Already selected",
+            ["Select Topic"] = "Select Topic",
+            ["Filled"] = "Filled",
+            ["file"] = "file",
+            ["files"] = "files",
 
             //delete modal
             ["Permanent Delete"] = "Permanent Delete",

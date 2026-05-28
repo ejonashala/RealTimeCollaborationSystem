@@ -16,9 +16,9 @@
 
 <section class="dashboard-pagehead topics-head">
     <div>
-        <p class="dashboard-kicker">Faculty Projects</p>
-        <h2>Topics</h2>
-        <p class="dashboard-lead">Review groups after you request to join or after your request is accepted.</p>
+        <p class="dashboard-kicker">@T.T("Faculty Projects")</p>
+        <h2>@T.T("Topics")</h2>
+        <p class="dashboard-lead">@T.T("Review groups after you request to join or after your request is accepted.")</p>
     </div>
 </section>
 
@@ -30,8 +30,8 @@
 {
     <section class="topics-card">
         <div class="topics-empty">
-            <h4>No groups yet</h4>
-            <p>Search for professors in Groups and send a join request. Requested or accepted groups will appear here.</p>
+            <h4>@T.T("No groups yet")</h4>
+            <p>@T.T("Search for professors in Groups and send a join request. Requested or accepted groups will appear here.")</p>
         </div>
     </section>
 }
@@ -46,7 +46,7 @@ else
                 || string.Equals(topic.Status, "Taken", StringComparison.OrdinalIgnoreCase));
             var availableTopicsCount = topics.Count - takenTopicsCount;
             var professorName = string.IsNullOrWhiteSpace(batch.CreatedByProfessor?.Name)
-                ? "Professor not assigned"
+                ? T.T("Professor not assigned")
                 : batch.CreatedByProfessor.Name;
             var selectedTopicInBatch = currentStudentId.HasValue
                 ? topics.FirstOrDefault(topic => topic.ReservedByStudentId == currentStudentId.Value)
@@ -60,15 +60,15 @@ else
             <article class="topics-card topic-batch topic-batch--academic @(isPendingRequest ? "topic-batch--pending-request" : "")" data-topic-batch-id="@batch.Id" data-selected-topic-id="@(selectedTopicInBatch?.Id.ToString() ?? string.Empty)">
                 <div class="topic-batch__head">
                     <div class="topic-batch__main">
-                        <p class="dashboard-kicker">Group</p>
+                        <p class="dashboard-kicker">@T.T("Group")</p>
                         <h3>@batch.Title</h3>
                         <div class="topic-batch__meta">
                             <span>
-                                <strong>Professor</strong>
+                                <strong>@T.T("Professor")</strong>
                                 @professorName
                             </span>
                             <span>
-                                <strong>Open spots</strong>
+                                <strong>@T.T("Open spots")</strong>
                                 @availableTopicsCount
                             </span>
                         </div>
@@ -79,39 +79,39 @@ else
                             }
                             else if (isPendingRequest)
                             {
-                                <span>Your request is pending. Topics become active after acceptance.</span>
+                                <span>@T.T("Your request is pending. Topics become active after acceptance.")</span>
                             }
                             else
                             {
-                                <span>Your group is active. Review your selected topic and available options.</span>
+                                <span>@T.T("Your group is active. Review your selected topic and available options.")</span>
                             }
 
                             @if (hasSelectedTopicInBatch)
                             {
-                                <span class="topic-batch__selection">Selected: @selectedTopicInBatch!.Title</span>
+                                <span class="topic-batch__selection">@T.T("Selected"): @selectedTopicInBatch!.Title</span>
                             }
                         </p>
                     </div>
 
                     <aside class="topic-batch__side" aria-label="Topic group summary">
                         <span class="topics-badge @(isActiveGroup ? "topics-badge--active" : "topics-badge--pending")">
-                            @(isActiveGroup ? "Joined" : "Requested")
+                            @(isActiveGroup ? T.T("Joined") : T.T("Requested"))
                         </span>
 
                         <div class="topic-batch__stats">
                             <div class="topic-batch__stat topic-batch__stat--available">
                                 <strong data-topic-count="available">@availableTopicsCount</strong>
-                                <span>Open</span>
+                                <span>@T.T("Open")</span>
                             </div>
                             <div class="topic-batch__stat topic-batch__stat--taken">
                                 <strong data-topic-count="taken">@takenTopicsCount</strong>
-                                <span>Filled</span>
+                                <span>@T.T("Filled")</span>
                             </div>
                         </div>
 
                         @if (!string.IsNullOrWhiteSpace(batch.AttachmentPath))
                         {
-                            <a class="dashboard-card__button topic-batch__file" href="@batch.AttachmentPath" download="@batch.AttachmentFileName">Download file</a>
+                            <a class="dashboard-card__button topic-batch__file" href="@batch.AttachmentPath" download="@batch.AttachmentFileName">@T.T("Download file")</a>
                         }
                     </aside>
                 </div>
@@ -119,8 +119,8 @@ else
                 @if (isPendingRequest)
                 {
                     <div class="topics-empty topic-batch__pending-note">
-                        <h4>Request pending</h4>
-                        <p>This group is visible because you sent a join request. It will become active when the professor accepts you into the group.</p>
+                        <h4>@T.T("Request pending")</h4>
+                        <p>@T.T("This group is visible because you sent a join request. It will become active when the professor accepts you into the group.")</p>
                     </div>
                 }
                 else
@@ -151,7 +151,7 @@ else
                                     <div class="topic-card__title-row">
                                         <h4>@topic.Title</h4>
                                         <span class="topics-badge @statusBadgeClass" data-topic-status>
-                                            @(isSelectedByCurrentStudent ? "Selected" : isTaken ? "Filled" : "Available")
+                                            @(isSelectedByCurrentStudent ? T.T("Selected") : isTaken ? T.T("Filled") : T.T("Available"))
                                         </span>
                                     </div>
 
@@ -168,7 +168,7 @@ else
                                         data-select-topic
                                         data-select-url="@Url.Action("SelectTopic", "StudentTopics", new { id = topic.Id })"
                                         @(shouldDisableSelect ? "disabled" : "")>
-                                        @buttonText
+                                        @T.T(buttonText)
                                     </button>
 
                                     <button

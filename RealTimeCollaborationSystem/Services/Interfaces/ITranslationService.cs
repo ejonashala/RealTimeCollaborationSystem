@@ -2,6 +2,7 @@
 {
     public interface ITranslationService
     {
+        string CurrentLanguage();
         string T(string key);
     }
 }

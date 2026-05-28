@@ -84,7 +84,7 @@
                         <tr>
                             <td>
                                 <strong class="management-title">@batch.Title</strong>
-                                <span class="management-muted">Created @batch.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                                <span class="management-muted">@T.T("Created") @batch.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
                             </td>
                             <td>@(string.IsNullOrWhiteSpace(batch.CreatedByProfessor?.Name) ? @T.T("Professor") : batch.CreatedByProfessor.Name)</td>
                             <td>

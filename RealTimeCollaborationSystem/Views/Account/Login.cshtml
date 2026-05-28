@@ -1,4 +1,6 @@
 @model RealTimeCollaborationSystem.Models.Dtos.UserLoginDto
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
 
 @{
     ViewData["Title"] = "Login";
@@ -12,23 +14,23 @@
     <div class="login-box login-box--login">
         <div class="login-header">
             <h1>CollabSpace</h1>
-            <p>Welcome back</p>
+            <p>@T.T("Welcome back")</p>
         </div>
 
         <form asp-action="Login" method="post" novalidate class="auth-form auth-form--login">
             @Html.AntiForgeryToken()
 
             <div class="input-group">
-                <label><i class="fa fa-envelope"></i> Email</label>
-                <input asp-for="Email" placeholder="Enter your email" />
+                <label><i class="fa fa-envelope"></i> @T.T("Email")</label>
+                <input asp-for="Email" placeholder="@T.T("Enter your email")" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="input-group">
-                <label><i class="fa fa-lock"></i> Password</label>
+                <label><i class="fa fa-lock"></i> @T.T("Password")</label>
 
                 <div class="password-box">
-                    <input asp-for="Password" placeholder="Enter your password" />
+                    <input asp-for="Password" placeholder="@T.T("Enter your password")" />
                     <i class="fa fa-eye-slash eye-toggle" data-target="Password"></i>
                 </div>
 
@@ -37,18 +39,18 @@
 
             <div class="login-error" asp-validation-summary="ModelOnly"></div>
 
-            <button type="submit" class="login-btn">Log In</button>
+            <button type="submit" class="login-btn">@T.T("Log In")</button>
 
         </form>
 
         <p class="signup-link">
-            Don't have an account?
-            <a href="/Account/Register">Create account</a>
+            @T.T("Don't have an account?")
+            <a href="/Account/Register">@T.T("Create account")</a>
         </p>
 
         <p class="login-footer">
-            Forgot your password?
-            <a asp-controller="Account" asp-action="ForgotPassword">Reset it</a>
+            @T.T("Forgot your password?")
+            <a asp-controller="Account" asp-action="ForgotPassword">@T.T("Reset it")</a>
         </p>
     </div>
 </div>

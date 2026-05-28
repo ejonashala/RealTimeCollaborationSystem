@@ -114,7 +114,7 @@
                         <div class="task-feedback-summary__head">
                             <div>
                                 <span>@T.T("Feedback")</span>
-                                <strong>@(isReviewed ? "Reviewed" : "Needs review")</strong>
+                                <strong>@(isReviewed ? T.T("Reviewed") : T.T("Needs review"))</strong>
                             </div>
                             @if (submission.Grade.HasValue)
                             {

@@ -13,10 +13,11 @@
 
     var pageTitle = ViewData["Title"]?.ToString();
     var fullTitle = string.IsNullOrWhiteSpace(pageTitle) ? "CollabSpace" : $"{pageTitle} - CollabSpace";
+    var currentLanguage = T.CurrentLanguage();
 }
 
 <!DOCTYPE html>
-<html lang="@(Context.Session.GetString("Language") ?? "sq")">
+<html lang="@currentLanguage">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -40,9 +41,6 @@
                 <a class="site-nav__link" href="@Url.Action("Index", "Home")#benefits">@T.T("Benefits")</a>
             </nav>
 
-            @{
-                var currentLanguage = Context.Session.GetString("Language") ?? "sq";
-            }
             <form asp-controller="Home" asp-action="ChangeLanguage" method="post" class="site-language-form">
                 @Html.AntiForgeryToken()
 

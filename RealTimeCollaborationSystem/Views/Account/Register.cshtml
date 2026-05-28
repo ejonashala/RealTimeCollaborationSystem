@@ -1,4 +1,6 @@
 @model RealTimeCollaborationSystem.Models.Dtos.RegisterDto
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
 
 @{
     ViewData["Title"] = "Sign Up";
@@ -14,33 +16,33 @@
 
         <div class="login-header">
             <h1>CollabSpace</h1>
-            <p>Create your account</p>
+            <p>@T.T("Create your account")</p>
         </div>
 
         <form asp-action="Register" method="post" novalidate class="auth-form auth-form--register">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="input-group">
-                <label><i class="fa fa-user"></i> Name</label>
-                <input asp-for="Name" placeholder="Enter your name" />
+                <label><i class="fa fa-user"></i> @T.T("Name")</label>
+                <input asp-for="Name" placeholder="@T.T("Enter your name")" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
 
             <div class="input-group">
-                <label><i class="fa fa-envelope"></i> Email</label>
+                <label><i class="fa fa-envelope"></i> @T.T("Email")</label>
                 <input asp-for="Email" placeholder="you@example.com" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="input-group">
                 <label for="Password">
-                    <i class="fa fa-lock"></i> Password
+                    <i class="fa fa-lock"></i> @T.T("Password")
                 </label>
 
                 <div class="password-box">
                     <input asp-for="Password"
                            type="password"
-                           placeholder="Enter a password" />
+                           placeholder="@T.T("Enter a password")" />
 
                     <i class="fa fa-eye-slash eye-toggle"
                        data-target="Password"></i>
@@ -52,13 +54,13 @@
 
             <div class="input-group">
                 <label for="Confirm">
-                    <i class="fa fa-lock"></i> Confirm Password
+                    <i class="fa fa-lock"></i> @T.T("Confirm Password")
                 </label>
 
                 <div class="password-box">
                     <input asp-for="Confirm"
                            type="password"
-                           placeholder="Repeat your password" />
+                           placeholder="@T.T("Repeat your password")" />
 
                     <i class="fa fa-eye-slash eye-toggle"
                        data-target="Confirm"></i>
@@ -67,11 +69,11 @@
                 <span asp-validation-for="Confirm" class="text-danger"></span>
             </div>
 
-            <button type="submit" class="login-btn">Create Account</button>
+            <button type="submit" class="login-btn">@T.T("Create Account")</button>
 
             <p class="signup-link">
-                Already have an account?
-                <a href="/Account/Login">Log in</a>
+                @T.T("Already have an account?")
+                <a href="/Account/Login">@T.T("Log in")</a>
             </p>
 
         </form>

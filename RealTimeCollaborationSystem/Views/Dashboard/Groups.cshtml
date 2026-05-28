@@ -76,12 +76,12 @@
                         </div>
 
                         <div class="student-group-card__meta">
-                            <span>@(string.IsNullOrWhiteSpace(group.ProfessorEmail) ? "Email not provided" : group.ProfessorEmail)</span>
-                            <span>@(string.IsNullOrWhiteSpace(group.ProfessorUniversityOrInstitution) ? "University not provided" : group.ProfessorUniversityOrInstitution)</span>
-                            <span>@(string.IsNullOrWhiteSpace(group.ProfessorFieldOfStudy) ? "Field not provided" : group.ProfessorFieldOfStudy)</span>
+                            <span>@(string.IsNullOrWhiteSpace(group.ProfessorEmail) ? T.T("Email not provided") : group.ProfessorEmail)</span>
+                            <span>@(string.IsNullOrWhiteSpace(group.ProfessorUniversityOrInstitution) ? T.T("University not provided") : group.ProfessorUniversityOrInstitution)</span>
+                            <span>@(string.IsNullOrWhiteSpace(group.ProfessorFieldOfStudy) ? T.T("Field not provided") : group.ProfessorFieldOfStudy)</span>
                             @if (group.IsJoinedByCurrentStudent && !string.IsNullOrWhiteSpace(group.SelectedTopicTitle))
                             {
-                                <span>Selected: @group.SelectedTopicTitle</span>
+                                <span>@T.T("Selected"): @group.SelectedTopicTitle</span>
                             }
                         </div>
 
