@@ -1,680 +1,1276 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Presentation page for Real Time Collaboration System, an ASP.NET Core university project.">
-  <title>Real Time Collaboration System | Vercel Demo</title>
-  <style>
-    :root {
-      --bg: #f7f8f4;
-      --ink: #17201d;
-      --muted: #66736c;
-      --line: #dce3dc;
-      --panel: #ffffff;
-      --accent: #117865;
-      --accent-strong: #0d5f50;
-      --warm: #e96f4c;
-      --soft: #e8f4ef;
-      --shadow: 0 18px 50px rgba(23, 32, 29, 0.12);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      background:
-        linear-gradient(135deg, rgba(17, 120, 101, 0.12), transparent 36%),
-        linear-gradient(315deg, rgba(233, 111, 76, 0.14), transparent 34%),
-        var(--bg);
-      color: var(--ink);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.6;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .page {
-      min-height: 100vh;
-      overflow: hidden;
-    }
-
-    .shell {
-      width: min(1120px, calc(100% - 32px));
-      margin: 0 auto;
-    }
-
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 24px 0;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 800;
-      letter-spacing: 0;
-    }
-
-    .brand-mark {
-      display: grid;
-      width: 42px;
-      height: 42px;
-      place-items: center;
-      border-radius: 8px;
-      background: var(--ink);
-      color: #fff;
-      font-size: 0.92rem;
-      box-shadow: 0 10px 26px rgba(23, 32, 29, 0.18);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      color: var(--muted);
-      font-size: 0.94rem;
-      font-weight: 700;
-    }
-
-    .nav-links a:hover {
-      color: var(--accent);
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.82fr);
-      align-items: center;
-      gap: 56px;
-      padding: 64px 0 86px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.72);
-      color: var(--accent-strong);
-      font-size: 0.86rem;
-      font-weight: 800;
-    }
-
-    .eyebrow-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--warm);
-    }
-
-    h1,
-    h2,
-    h3,
-    p {
-      margin: 0;
-    }
-
-    h1 {
-      max-width: 760px;
-      margin-top: 22px;
-      font-size: clamp(2.5rem, 7vw, 5.7rem);
-      line-height: 0.94;
-      letter-spacing: 0;
-    }
-
-    .hero-copy {
-      max-width: 670px;
-      margin-top: 24px;
-      color: var(--muted);
-      font-size: clamp(1rem, 2vw, 1.18rem);
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-top: 32px;
-    }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 48px;
-      padding: 0 18px;
-      border: 1px solid var(--ink);
-      border-radius: 8px;
-      font-weight: 800;
-      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
-    }
-
-    .button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(23, 32, 29, 0.16);
-    }
-
-    .button.primary {
-      background: var(--ink);
-      color: #fff;
-    }
-
-    .button.secondary {
-      background: rgba(255, 255, 255, 0.68);
-    }
-
-    .demo-panel {
-      position: relative;
-      padding: 16px;
-      border: 1px solid rgba(23, 32, 29, 0.08);
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.72);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
-    }
-
-    .window {
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--panel);
-    }
-
-    .window-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 42px;
-      padding: 0 14px;
-      border-bottom: 1px solid var(--line);
-      background: #fbfcfa;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--line);
-    }
-
-    .dot:nth-child(1) {
-      background: var(--warm);
-    }
-
-    .dot:nth-child(2) {
-      background: #e6bf4a;
-    }
-
-    .dot:nth-child(3) {
-      background: var(--accent);
-    }
-
-    .mock-dashboard {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      min-height: 430px;
-    }
-
-    .mock-sidebar {
-      padding: 18px 14px;
-      border-right: 1px solid var(--line);
-      background: #f1f5f1;
-    }
-
-    .mock-pill {
-      height: 12px;
-      margin-bottom: 16px;
-      border-radius: 999px;
-      background: #cfd9d1;
-    }
-
-    .mock-pill.active {
-      width: 78%;
-      background: var(--accent);
-    }
-
-    .mock-main {
-      padding: 22px;
-    }
-
-    .mock-title {
-      width: 58%;
-      height: 18px;
-      border-radius: 999px;
-      background: var(--ink);
-    }
-
-    .mock-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-    .mock-card {
-      min-height: 112px;
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-    }
-
-    .mock-line {
-      height: 10px;
-      margin-bottom: 12px;
-      border-radius: 999px;
-      background: #dbe5dc;
-    }
-
-    .mock-line.short {
-      width: 56%;
-      background: rgba(17, 120, 101, 0.24);
-    }
-
-    .mock-wide {
-      grid-column: 1 / -1;
-      min-height: 130px;
-      background:
-        linear-gradient(90deg, rgba(17, 120, 101, 0.16), transparent 62%),
-        #fff;
-    }
-
-    section {
-      padding: 76px 0;
-    }
-
-    .section-heading {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 28px;
-      margin-bottom: 28px;
-    }
-
-    .section-heading h2 {
-      font-size: clamp(2rem, 4vw, 3.2rem);
-      line-height: 1;
-      letter-spacing: 0;
-    }
-
-    .section-heading p {
-      max-width: 500px;
-      color: var(--muted);
-    }
-
-    .feature-grid,
-    .tech-grid,
-    .screenshot-grid {
-      display: grid;
-      gap: 16px;
-    }
-
-    .feature-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .feature-card,
-    .tech-item,
-    .screenshot-card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.82);
-      box-shadow: 0 12px 32px rgba(23, 32, 29, 0.06);
-    }
-
-    .feature-card {
-      padding: 22px;
-    }
-
-    .feature-card h3 {
-      margin-top: 18px;
-      font-size: 1.05rem;
-    }
-
-    .feature-card p {
-      margin-top: 9px;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    .feature-icon {
-      display: grid;
-      width: 44px;
-      height: 44px;
-      place-items: center;
-      border-radius: 8px;
-      background: var(--soft);
-      color: var(--accent-strong);
-      font-weight: 900;
-    }
-
-    .tech-grid {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-    }
-
-    .tech-item {
-      display: flex;
-      align-items: center;
-      min-height: 72px;
-      padding: 18px;
-      color: var(--ink);
-      font-weight: 800;
-    }
-
-    .screenshots {
-      background: rgba(255, 255, 255, 0.42);
-      border-top: 1px solid rgba(23, 32, 29, 0.08);
-      border-bottom: 1px solid rgba(23, 32, 29, 0.08);
-    }
-
-    .screenshot-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .screenshot-card {
-      overflow: hidden;
-    }
-
-    .placeholder {
-      display: grid;
-      min-height: 210px;
-      place-items: center;
-      background:
-        linear-gradient(135deg, rgba(17, 120, 101, 0.18), transparent 54%),
-        linear-gradient(315deg, rgba(233, 111, 76, 0.18), transparent 52%),
-        #f6faf7;
-    }
-
-    .placeholder span {
-      padding: 9px 12px;
-      border: 1px dashed rgba(23, 32, 29, 0.26);
-      border-radius: 8px;
-      color: var(--muted);
-      font-size: 0.9rem;
-      font-weight: 800;
-    }
-
-    .screenshot-card h3 {
-      padding: 16px 16px 4px;
-      font-size: 1rem;
-    }
-
-    .screenshot-card p {
-      padding: 0 16px 18px;
-      color: var(--muted);
-      font-size: 0.93rem;
-    }
-
-    .notice {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      gap: 24px;
-      padding: 26px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--ink);
-      color: #fff;
-    }
-
-    .notice p {
-      max-width: 780px;
-      color: rgba(255, 255, 255, 0.78);
-    }
-
-    .notice .button {
-      border-color: #fff;
-      background: #fff;
-      color: var(--ink);
-    }
-
-    footer {
-      padding: 34px 0;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    @media (max-width: 920px) {
-      .hero {
+@using RealTimeCollaborationSystem.Services.Interfaces
+@inject ITranslationService T
+
+@{
+    ViewData["Title"] = "CollabSpace";
+}
+
+@section Styles {
+    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
+
+.site-body--home {
+    background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 24%),
+        radial-gradient(circle at 88% 12%, rgba(245, 158, 11, 0.06), transparent 18%),
+        linear-gradient(180deg, #fdfcf9 0%, #f5f6f9 34%, #eef2f7 100%);
+}
+
+.site-body--home .site-header {
+    background: rgba(249, 249, 247, 0.82);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.04);
+}
+
+.site-body--home .site-brand__mark {
+    background: linear-gradient(135deg, #132033, #2451d1);
+    box-shadow: 0 18px 36px rgba(37, 99, 235, 0.2);
+}
+
+.home-page {
+    --home-text: #111827;
+    --home-text-soft: #607086;
+    --home-text-muted: #8693a7;
+    --home-border: rgba(15, 23, 42, 0.08);
+    --home-border-strong: rgba(37, 99, 235, 0.14);
+    --home-surface: rgba(255, 255, 255, 0.78);
+    --home-surface-solid: #fbfbf9;
+    --home-surface-muted: #f1f4f8;
+    --home-panel: #f6f7fb;
+    --home-primary: #2354d7;
+    --home-primary-deep: #102033;
+    --home-accent: #6ea9ff;
+    --home-warm: #c58b46;
+    --home-shadow: 0 30px 80px rgba(15, 23, 42, 0.08);
+    --home-shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.05);
+    --home-shell-max: 1560px;
+    --home-shell-gutter: clamp(1rem, 2.3vw, 2.5rem);
+    color: var(--home-text);
+    overflow-x: clip;
+}
+
+.home-shell {
+    width: min(var(--home-shell-max), calc(100% - (var(--home-shell-gutter) * 2)));
+    margin-inline: auto;
+}
+
+.hero-section {
+    position: relative;
+    padding: 4.25rem 0 2.4rem;
+    overflow-x: clip;
+}
+
+.hero-section::before,
+.hero-section::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(14px);
+}
+
+.hero-section::before {
+    width: 28rem;
+    height: 28rem;
+    top: -8rem;
+    right: -9rem;
+    background: radial-gradient(circle, rgba(110, 169, 255, 0.18), transparent 68%);
+}
+
+.hero-section::after {
+    width: 22rem;
+    height: 22rem;
+    left: -8rem;
+    bottom: -2rem;
+    background: radial-gradient(circle, rgba(197, 139, 70, 0.09), transparent 72%);
+}
+
+.hero-banner {
+    position: relative;
+    padding: 2.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    border-radius: 2.2rem;
+    background:
+        linear-gradient(180deg, rgba(251, 251, 249, 0.94), rgba(243, 246, 251, 0.88)),
+        linear-gradient(120deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+    box-shadow: 0 45px 110px rgba(15, 23, 42, 0.1);
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.hero-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(rgba(37, 84, 215, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 84, 215, 0.05) 1px, transparent 1px);
+    background-size: 34px 34px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.38), transparent 75%);
+    pointer-events: none;
+}
+
+.hero-banner::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: calc(2.2rem - 1px);
+    border: 1px solid rgba(37, 84, 215, 0.07);
+    pointer-events: none;
+}
+
+.hero-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(22rem, 0.92fr);
+    gap: 2.1rem;
+    align-items: center;
+}
+
+.hero-copy,
+.hero-visual,
+.workspace-board__primary,
+.workspace-board__side,
+.benefits-copy,
+.benefits-showcase,
+.cta-copy,
+.feature-spotlight,
+.journey-step {
+    min-width: 0;
+}
+
+.hero-copy h1,
+.section-heading h2,
+.benefits-copy h2,
+.cta-copy h2,
+.workspace-panel__top h2,
+.benefits-showcase__header h3 {
+    margin: 0;
+    font-family: "Sora", "Manrope", sans-serif;
+    letter-spacing: -0.045em;
+    color: var(--home-primary-deep);
+}
+
+.hero-eyebrow,
+.section-kicker,
+.workspace-panel__eyebrow,
+.feature-spotlight__kicker,
+.benefit-stat__label,
+.workspace-sidecard__label {
+    display: inline-flex;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.73rem;
+    font-weight: 800;
+    color: var(--home-primary);
+}
+
+.hero-eyebrow {
+    padding: 0.68rem 0.98rem;
+    border: 1px solid rgba(37, 84, 215, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: var(--home-shadow-soft);
+}
+
+.hero-copy h1 {
+    max-width: 14ch;
+    margin-top: 1.1rem;
+    font-size: clamp(2.55rem, 4.1vw, 4.2rem);
+    line-height: 1.04;
+    color: #091425;
+    text-shadow: 0 10px 28px rgba(255, 255, 255, 0.28);
+}
+
+.hero-subtitle,
+.section-heading p,
+.feature-spotlight p,
+.journey-step p,
+.benefits-copy > p,
+.benefits-points__item p,
+.benefit-rail__item p,
+.cta-copy p,
+.workspace-panel__lead p,
+.workspace-list__item p,
+.workspace-sidecard p,
+.hero-proof__item span,
+.workspace-panel__id {
+    color: var(--home-text-soft);
+    line-height: 1.72;
+}
+
+.hero-subtitle {
+    max-width: 44rem;
+    margin: 1.2rem 0 0;
+    font-size: 1.02rem;
+}
+
+.hero-actions,
+.cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 1.8rem;
+}
+
+.home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.35rem;
+    padding: 0.9rem 1.5rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 800;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.home-btn:hover {
+    transform: translateY(-2px);
+}
+
+.home-btn--primary {
+    color: #fff;
+    background: linear-gradient(135deg, #102033, #2354d7);
+    box-shadow: 0 20px 40px rgba(37, 84, 215, 0.22);
+}
+
+.home-btn--secondary {
+    color: var(--home-primary-deep);
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: var(--home-shadow-soft);
+}
+
+.hero-proof {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+    max-width: 36rem;
+    margin-top: 1.25rem;
+}
+
+.hero-proof__item {
+    padding: 0.95rem 1rem;
+    border: 1px solid rgba(15, 23, 42, 0.07);
+    border-radius: 1.2rem;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(245, 247, 251, 0.76));
+    box-shadow: var(--home-shadow-soft);
+}
+
+.hero-proof__item strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--home-primary-deep);
+    font-size: 0.96rem;
+}
+
+.hero-proof__item span {
+    display: block;
+    font-size: 0.9rem;
+}
+
+.hero-highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1.2rem;
+}
+
+.hero-highlights span,
+.feature-support span {
+    padding: 0.72rem 0.98rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--home-text-muted);
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.hero-visual {
+    position: relative;
+}
+
+.hero-visual::before {
+    content: "";
+    position: absolute;
+    inset: auto 1.2rem -1.2rem 2rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(16, 32, 51, 0.14), transparent 70%);
+    filter: blur(14px);
+    z-index: 0;
+}
+
+.workspace-panel,
+.feature-spotlight,
+.journey-step,
+.benefits-showcase,
+.cta-panel {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: var(--home-shadow);
+}
+
+.workspace-panel {
+    position: relative;
+    z-index: 1;
+    padding: 1.2rem;
+    border-radius: 1.9rem;
+    background:
+        linear-gradient(180deg, rgba(19, 32, 51, 0.98), rgba(20, 36, 59, 0.96)),
+        linear-gradient(135deg, rgba(110, 169, 255, 0.08), transparent 45%);
+    color: #e6edf8;
+    overflow: hidden;
+}
+
+.workspace-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at top right, rgba(110, 169, 255, 0.15), transparent 26%),
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: auto, 24px 24px, 24px 24px;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.workspace-panel__chrome,
+.workspace-panel__top,
+.workspace-metrics,
+.workspace-board {
+    position: relative;
+    z-index: 1;
+}
+
+.workspace-panel__chrome {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.workspace-panel__lights {
+    display: inline-flex;
+    gap: 0.4rem;
+}
+
+.workspace-panel__lights span {
+    width: 0.72rem;
+    height: 0.72rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.26);
+}
+
+.workspace-panel__lights span:first-child {
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.workspace-panel__id {
+    font-size: 0.82rem;
+    color: rgba(230, 237, 248, 0.74);
+}
+
+.workspace-panel__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.workspace-panel__eyebrow,
+.workspace-sidecard__label {
+    color: #8db3ff;
+}
+
+.workspace-panel__top h2 {
+    margin-top: 0.48rem;
+    max-width: 14ch;
+    color: #f4f8ff;
+    font-size: 1.34rem;
+    line-height: 1.12;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.58rem 0.88rem;
+    border-radius: 999px;
+    border: 1px solid rgba(141, 179, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: #eaf1fb;
+    font-size: 0.82rem;
+    font-weight: 800;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.workspace-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin-top: 1rem;
+}
+
+.workspace-metric {
+    padding: 0.82rem 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.workspace-metric span {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: rgba(230, 237, 248, 0.68);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+}
+
+.workspace-metric strong {
+    display: block;
+    color: #f5f9ff;
+    font-size: 0.92rem;
+    line-height: 1.35;
+}
+
+.workspace-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.7fr);
+    gap: 0.85rem;
+    margin-top: 0.95rem;
+}
+
+.workspace-panel__lead,
+.workspace-sidecard {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.workspace-panel__lead {
+    padding: 1rem;
+}
+
+.workspace-panel__lead strong,
+.workspace-list__item strong,
+.workspace-sidecard strong {
+    color: #f6f9ff;
+}
+
+.workspace-panel__lead strong {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+.workspace-panel__lead p {
+    margin: 0.5rem 0 0;
+    color: rgba(230, 237, 248, 0.76);
+}
+
+.workspace-list {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: 0.75rem;
+}
+
+.workspace-list__item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    align-items: start;
+    padding: 0.9rem 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.workspace-list__dot {
+    width: 0.82rem;
+    height: 0.82rem;
+    margin-top: 0.35rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7bb1ff, #2f60de);
+    box-shadow: 0 0 0 0.3rem rgba(110, 169, 255, 0.14);
+}
+
+.workspace-list__item p {
+    margin: 0.3rem 0 0;
+    color: rgba(230, 237, 248, 0.7);
+}
+
+.workspace-board__side {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.workspace-sidecard {
+    padding: 0.95rem;
+}
+
+.workspace-sidecard p {
+    margin: 0.45rem 0 0;
+    color: rgba(230, 237, 248, 0.72);
+}
+
+.workspace-sidecard__progress {
+    height: 0.62rem;
+    margin-top: 0.85rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.workspace-sidecard__progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #8cb5ff, #4d7df0);
+}
+
+.workspace-sidecard--soft {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.workspace-sidecard__list {
+    margin: 0.55rem 0 0;
+    padding-left: 1rem;
+    color: rgba(230, 237, 248, 0.74);
+}
+
+.workspace-sidecard__list li + li {
+    margin-top: 0.4rem;
+}
+
+.section-block {
+    padding: 2.8rem 0;
+}
+
+.section-block--features {
+    padding-top: 1.3rem;
+}
+
+.section-block--features .home-shell,
+.section-block--benefits .home-shell {
+    position: relative;
+}
+
+.section-heading {
+    max-width: 48rem;
+    margin-bottom: 1.9rem;
+}
+
+.section-heading--centered {
+    margin-inline: auto;
+    text-align: center;
+}
+
+.section-heading h2,
+.benefits-copy h2,
+.cta-copy h2 {
+    font-size: clamp(2rem, 3vw, 3rem);
+    line-height: 1.08;
+}
+
+.section-heading p,
+.benefits-copy > p {
+    margin-top: 0.95rem;
+}
+
+.feature-layout {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.35rem;
+    align-items: stretch;
+    grid-auto-flow: dense;
+}
+
+.feature-layout::before {
+    content: "";
+    position: absolute;
+    inset: -0.75rem 0 auto 0;
+    height: calc(100% + 2rem);
+    border-radius: 2rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(240, 244, 250, 0.22));
+    z-index: 0;
+}
+
+.feature-spotlight {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    grid-column: span 5;
+    padding: 1.5rem;
+    border-radius: 1.6rem;
+    background:
+        linear-gradient(180deg, rgba(251, 251, 249, 0.95), rgba(241, 244, 249, 0.9));
+}
+
+.feature-spotlight--wide {
+    grid-column: span 7;
+    padding: 1.75rem;
+    background:
+        linear-gradient(145deg, rgba(16, 32, 51, 0.98), rgba(29, 56, 102, 0.94));
+}
+
+.feature-spotlight--expanded {
+    grid-column: span 7;
+}
+
+.feature-spotlight--wide .feature-spotlight__kicker,
+.feature-spotlight--wide h3,
+.feature-spotlight--wide p {
+    color: #eef4ff;
+}
+
+.feature-spotlight--wide h3 {
+    color: #ffffff !important;
+}
+
+.feature-spotlight--wide p {
+    color: rgba(238, 244, 255, 0.78);
+}
+
+.feature-spotlight--accent {
+    grid-column: span 5;
+    background:
+        linear-gradient(145deg, rgba(255, 249, 241, 0.96), rgba(245, 241, 234, 0.92));
+}
+
+.feature-spotlight__kicker {
+    color: var(--home-primary);
+}
+
+.feature-spotlight--wide .feature-spotlight__kicker {
+    color: #8db3ff;
+}
+
+.feature-spotlight--accent .feature-spotlight__kicker {
+    color: #9a6426;
+}
+
+.feature-spotlight h3 {
+    margin: 0.8rem 0 0.6rem;
+    color: var(--home-primary-deep);
+    font-size: 1.2rem;
+    line-height: 1.33;
+}
+
+.feature-spotlight p {
+    margin: 0;
+}
+
+.feature-support {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1.35rem;
+}
+
+.journey-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.journey-step {
+    padding: 1.35rem;
+    border-radius: 1.45rem;
+    background:
+        linear-gradient(180deg, rgba(251, 251, 249, 0.94), rgba(242, 245, 249, 0.9));
+}
+
+.journey-step__number,
+.benefit-rail__number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.95rem;
+    min-height: 2.95rem;
+    border-radius: 1rem;
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    background: linear-gradient(135deg, #102033, #2354d7);
+    box-shadow: 0 16px 28px rgba(37, 84, 215, 0.16);
+}
+
+.journey-step h3 {
+    margin: 1rem 0 0.65rem;
+    color: var(--home-primary-deep);
+    font-size: 1.08rem;
+    line-height: 1.34;
+}
+
+.journey-step p {
+    margin: 0;
+}
+
+.section-block--benefits {
+    padding-top: 3.1rem;
+}
+
+.benefits-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+    gap: clamp(1.5rem, 2.3vw, 2.4rem);
+    align-items: stretch;
+}
+
+.benefits-copy,
+.benefits-showcase {
+    height: 100%;
+}
+
+.benefits-copy {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    align-content: start;
+    gap: 1rem;
+}
+
+.benefits-copy > p {
+    max-width: 38rem;
+    margin-top: 0;
+}
+
+.benefits-points {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin-top: 1.2rem;
+    align-content: start;
+}
+
+.benefits-points__item {
+    height: 100%;
+    padding: 1.1rem 1.15rem;
+    border: 1px solid rgba(15, 23, 42, 0.07);
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.64);
+    box-shadow: var(--home-shadow-soft);
+}
+
+.benefits-points__item strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--home-primary-deep);
+    font-size: 1rem;
+}
+
+.benefits-points__item p {
+    margin: 0;
+}
+
+.benefits-showcase {
+    display: grid;
+    align-content: start;
+    padding: 1.55rem;
+    border-radius: 1.9rem;
+    background:
+        linear-gradient(180deg, rgba(19, 32, 51, 0.96), rgba(28, 40, 61, 0.95)),
+        linear-gradient(145deg, rgba(110, 169, 255, 0.04), transparent 42%);
+    color: #eaf0fa;
+    overflow: hidden;
+    position: relative;
+}
+
+.benefits-showcase::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(110, 169, 255, 0.12), transparent 28%);
+    pointer-events: none;
+}
+
+.benefits-showcase__header,
+.benefit-rail {
+    position: relative;
+    z-index: 1;
+}
+
+.benefits-showcase__header h3 {
+    margin-top: 0.55rem;
+    color: #f4f7fd;
+    font-size: 1.45rem;
+    line-height: 1.24;
+}
+
+.benefit-stat__label {
+    color: #8db3ff;
+}
+
+.benefit-rail {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
+.benefit-rail__item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    align-items: start;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.benefit-rail__item:first-child {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.benefit-rail__item h4 {
+    margin: 0.15rem 0 0;
+    color: #f4f7fd;
+    font-size: 1.03rem;
+    line-height: 1.45;
+}
+
+.benefit-rail__item p {
+    margin: 0.35rem 0 0;
+    color: rgba(234, 240, 250, 0.74);
+}
+
+.section-block--cta {
+    padding: 2.4rem 0 4.5rem;
+}
+
+.cta-panel {
+    display: grid;
+    place-items: center;
+    min-height: 17rem;
+    padding: clamp(2.4rem, 4vw, 3.4rem);
+    border-radius: 2rem;
+    text-align: center;
+    background:
+        linear-gradient(180deg, rgba(252, 250, 247, 0.94), rgba(240, 244, 249, 0.94)),
+        linear-gradient(120deg, rgba(197, 139, 70, 0.04), transparent 35%);
+}
+
+.cta-copy {
+    max-width: 52rem;
+}
+
+.cta-copy .section-kicker {
+    justify-self: center;
+}
+
+.cta-copy p {
+    max-width: 42rem;
+    margin: 1rem auto 0;
+}
+
+@media (max-width: 1280px) {
+    .home-shell {
+        width: min(var(--home-shell-max), calc(100% - 1.5rem));
+    }
+
+    .hero-banner {
+        padding: 2rem;
+    }
+
+    .hero-grid {
+        gap: 1.6rem;
+        grid-template-columns: minmax(0, 1.06fr) minmax(20rem, 0.92fr);
+    }
+
+    .workspace-board {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .journey-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .benefits-layout {
+        gap: 1.3rem;
+    }
+}
+
+@media (max-width: 980px) {
+    .hero-grid,
+    .benefits-layout,
+    .workspace-board {
         grid-template-columns: 1fr;
-        padding-top: 36px;
-      }
+    }
 
-      .feature-grid,
-      .tech-grid,
-      .screenshot-grid {
+    .feature-spotlight,
+    .feature-spotlight--wide,
+    .feature-spotlight--expanded,
+    .feature-spotlight--accent {
+        grid-column: span 6;
+    }
+
+    .journey-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+    }
+}
 
-      .section-heading,
-      .notice {
-        align-items: start;
+@media (max-width: 900px) {
+    .hero-proof,
+    .workspace-metrics,
+    .journey-grid {
         grid-template-columns: 1fr;
-      }
+    }
+}
+
+@media (max-width: 760px) {
+    .home-shell {
+        width: min(var(--home-shell-max), calc(100% - 1.25rem));
     }
 
-    @media (max-width: 640px) {
-      .shell {
-        width: min(100% - 24px, 1120px);
-      }
+    .hero-section {
+        padding-top: 3.3rem;
+    }
 
-      .nav {
+    .hero-banner,
+    .workspace-panel,
+    .benefits-showcase,
+    .cta-panel {
+        padding: 1.4rem;
+        border-radius: 1.55rem;
+    }
+
+    .hero-copy h1 {
+        max-width: none;
+        font-size: clamp(2.2rem, 9vw, 3.15rem);
+    }
+
+    .hero-proof,
+    .workspace-metrics,
+    .feature-layout,
+    .journey-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-spotlight,
+    .feature-spotlight--wide,
+    .feature-spotlight--expanded,
+    .feature-spotlight--accent {
+        grid-column: auto;
+    }
+
+    .workspace-panel__top,
+    .workspace-panel__chrome {
+        flex-direction: column;
         align-items: flex-start;
-      }
-
-      .nav-links {
-        display: none;
-      }
-
-      .hero {
-        gap: 34px;
-        padding-bottom: 54px;
-      }
-
-      .button {
-        width: 100%;
-      }
-
-      .mock-dashboard {
-        grid-template-columns: 86px 1fr;
-        min-height: 330px;
-      }
-
-      .mock-sidebar {
-        padding: 14px 10px;
-      }
-
-      .mock-main {
-        padding: 16px;
-      }
-
-      .mock-grid,
-      .feature-grid,
-      .tech-grid,
-      .screenshot-grid {
-        grid-template-columns: 1fr;
-      }
-
-      section {
-        padding: 54px 0;
-      }
     }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <header class="shell nav">
-      <a class="brand" href="#">
-        <span class="brand-mark">RT</span>
-        <span>Real Time Collaboration System</span>
-      </a>
-      <nav class="nav-links" aria-label="Page sections">
-        <a href="#features">Features</a>
-        <a href="#technology">Technology</a>
-        <a href="#screenshots">Screenshots</a>
-      </nav>
-    </header>
 
-    <main>
-      <section class="shell hero">
-        <div>
-          <span class="eyebrow"><span class="eyebrow-dot"></span>University project presentation</span>
-          <h1>Real Time Collaboration System</h1>
-          <p class="hero-copy">
-            A web platform for students and professors to manage topics, course tasks,
-            submissions, notifications, and collaborative academic workflows in one place.
-          </p>
-          <div class="hero-actions">
-            <a class="button primary" href="https://github.com/ejonashala/RealTimeCollaborationSystem" target="_blank" rel="noopener noreferrer">View GitHub Repository</a>
-            <a class="button secondary" href="#screenshots">View Demo Sections</a>
-          </div>
-        </div>
+    .benefits-points {
+        grid-template-columns: 1fr;
+    }
 
-        <div class="demo-panel" aria-label="Dashboard preview illustration">
-          <div class="window">
-            <div class="window-bar">
-              <span class="dot"></span>
-              <span class="dot"></span>
-              <span class="dot"></span>
-            </div>
-            <div class="mock-dashboard">
-              <div class="mock-sidebar">
-                <div class="mock-pill active"></div>
-                <div class="mock-pill"></div>
-                <div class="mock-pill"></div>
-                <div class="mock-pill"></div>
-                <div class="mock-pill"></div>
-              </div>
-              <div class="mock-main">
-                <div class="mock-title"></div>
-                <div class="mock-grid">
-                  <div class="mock-card">
-                    <div class="mock-line"></div>
-                    <div class="mock-line short"></div>
-                    <div class="mock-line"></div>
-                  </div>
-                  <div class="mock-card">
-                    <div class="mock-line short"></div>
-                    <div class="mock-line"></div>
-                    <div class="mock-line"></div>
-                  </div>
-                  <div class="mock-card mock-wide">
-                    <div class="mock-line"></div>
-                    <div class="mock-line"></div>
-                    <div class="mock-line short"></div>
-                  </div>
+    .cta-panel {
+        min-height: auto;
+        text-align: left;
+        place-items: start;
+    }
+
+    .cta-copy .section-kicker {
+        justify-self: start;
+    }
+
+    .cta-copy p {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+}
+
+<div class="home-page">
+    <section class="hero-section">
+        <div class="home-shell">
+            <div class="hero-banner">
+                <div class="hero-grid">
+                    <div class="hero-copy">
+                        <span class="hero-eyebrow">@T.T("Real-time academic collaboration platform")</span>
+                        <h1>@T.T("CollabSpace brings students and professors into one structured, live academic workspace.")</h1>
+                        <p class="hero-subtitle">
+                            @T.T("Manage project topics, tasks, quizzes, teamwork, progress, and professor-student coordination in a platform designed for clarity and real-time momentum.")
+                        </p>
+
+                        <div class="hero-actions">
+                            <a class="home-btn home-btn--primary" href="#features">@T.T("Explore Features")</a>
+                            <a class="home-btn home-btn--secondary" href="#workflow">@T.T("See How It Works")</a>
+                        </div>
+
+                        <div class="hero-proof" aria-label="Platform qualities">
+                            <article class="hero-proof__item">
+                                <strong>@T.T("Role-aware coordination")</strong>
+                                <span>@T.T("Designed for both students and professors")</span>
+                            </article>
+                            <article class="hero-proof__item">
+                                <strong>@T.T("Live academic workflow")</strong>
+                                <span>@T.T("Tasks, progress, and updates stay connected")</span>
+                            </article>
+                        </div>
+
+                        <div class="hero-highlights" aria-label="Platform highlights">
+                            <span>@T.T("Built for students and professors")</span>
+                            <span>@T.T("Organized academic workflow")</span>
+                            <span>@T.T("Live updates and shared progress")</span>
+                        </div>
+                    </div>
+
+                    <div class="hero-visual" aria-hidden="true">
+                        <div class="workspace-panel">
+                            <div class="workspace-panel__chrome">
+                                <div class="workspace-panel__lights">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <span class="workspace-panel__id">@T.T("CollabSpace Workspace")</span>
+                            </div>
+
+                            <div class="workspace-panel__top">
+                                <div>
+                                    <span class="workspace-panel__eyebrow">@T.T("Workspace preview")</span>
+                                    <h2>@T.T("Academic coordination, in one place")</h2>
+                                </div>
+                                <span class="status-pill">@T.T("Live sync")</span>
+                            </div>
+
+                            <div class="workspace-metrics">
+                                <article class="workspace-metric">
+                                    <span>@T.T("Realtime")</span>
+                                    <strong>@T.T("Team activity")</strong>
+                                </article>
+                                <article class="workspace-metric">
+                                    <span>@T.T("Structured")</span>
+                                    <strong>@T.T("Task flow")</strong>
+                                </article>
+                                <article class="workspace-metric">
+                                    <span>@T.T("Visible")</span>
+                                    <strong>@T.T("Progress + feedback")</strong>
+                                </article>
+                            </div>
+
+                            <div class="workspace-board">
+                                <div class="workspace-board__primary">
+                                    <div class="workspace-panel__lead">
+                                        <strong>@T.T("One organized view for collaboration, planning, and progress.")</strong>
+                                        <p>@T.T("CollabSpace keeps topic decisions, tasks, guidance, quizzes, and updates in one connected academic environment.")</p>
+                                    </div>
+
+                                    <div class="workspace-list">
+                                        <div class="workspace-list__item">
+                                            <span class="workspace-list__dot"></span>
+                                            <div>
+                                                <strong>@T.T("Real-time teamwork spaces")</strong>
+                                                <p>@T.T("Shared work remains visible while groups collaborate and adjust quickly.")</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="workspace-list__item">
+                                            <span class="workspace-list__dot"></span>
+                                            <div>
+                                                <strong>@T.T("Tasks, topics, and quizzes")</strong>
+                                                <p>@T.T("Academic work stays structured from early planning through evaluation.")</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="workspace-list__item">
+                                            <span class="workspace-list__dot"></span>
+                                            <div>
+                                                <strong>@T.T("Role-based guidance and visibility")</strong>
+                                                <p>@T.T("Students and professors get the clarity they need without added noise.")</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="workspace-board__side">
+                                    <article class="workspace-sidecard">
+                                        <span class="workspace-sidecard__label">@T.T("Current focus")</span>
+                                        <strong>@T.T("Project alignment")</strong>
+                                        <p>@T.T("Topic review, task assignment, and professor feedback remain synchronized.")</p>
+                                        <div class="workspace-sidecard__progress">
+                                            <span style="width: 74%;"></span>
+                                        </div>
+                                    </article>
+
+                                    <article class="workspace-sidecard workspace-sidecard--soft">
+                                        <span class="workspace-sidecard__label">@T.T("Today")</span>
+                                        <ul class="workspace-sidecard__list">
+                                            <li>@T.T("Task updates published live")</li>
+                                            <li>@T.T("Quiz checkpoints ready")</li>
+                                            <li>@T.T("Professor guidance attached to work")</li>
+                                        </ul>
+                                    </article>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-      </section>
+    </section>
 
-      <section id="features" class="shell">
-        <div class="section-heading">
-          <h2>Main Features</h2>
-          <p>Designed around the practical academic collaboration flow between professors and students.</p>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <div class="feature-icon">01</div>
-            <h3>Role-based workspace</h3>
-            <p>Separate student and professor experiences for managing dashboard actions.</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon">02</div>
-            <h3>Topic selection</h3>
-            <p>Students can work with available topics while professors organize topic batches.</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon">03</div>
-            <h3>Course tasks</h3>
-            <p>Professors create tasks and review submissions from student groups.</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon">04</div>
-            <h3>Notifications</h3>
-            <p>System notifications keep users informed about important collaboration updates.</p>
-          </article>
-        </div>
-      </section>
+    <section class="section-block section-block--features" id="features">
+        <div class="home-shell">
+            <div class="section-heading">
+                <span class="section-kicker">@T.T("Core capabilities")</span>
+                <h2>@T.T("A curated feature set built around the way academic collaboration actually works.")</h2>
+                <p>@T.T("Instead of scattered tools and disconnected actions, CollabSpace organizes the most important parts of academic teamwork into a clear, focused experience.")</p>
+            </div>
 
-      <section id="technology" class="shell">
-        <div class="section-heading">
-          <h2>Technologies Used</h2>
-          <p>The full application remains an ASP.NET Core backend project. This Vercel page is only a static presentation layer.</p>
-        </div>
-        <div class="tech-grid">
-          <div class="tech-item">ASP.NET Core MVC</div>
-          <div class="tech-item">.NET 8</div>
-          <div class="tech-item">Entity Framework Core</div>
-          <div class="tech-item">SQL Server</div>
-          <div class="tech-item">SignalR</div>
-          <div class="tech-item">Razor Views</div>
-          <div class="tech-item">Bootstrap</div>
-          <div class="tech-item">JavaScript</div>
-          <div class="tech-item">HTML &amp; CSS</div>
-          <div class="tech-item">Vercel Static Hosting</div>
-        </div>
-      </section>
+            <div class="feature-layout">
+                <article class="feature-spotlight feature-spotlight--wide">
+                    <span class="feature-spotlight__kicker">@T.T("Live collaboration")</span>
+                    <h3>@T.T("Coordinate teamwork in real time without losing structure.")</h3>
+                    <p>@T.T("Students and professors can follow activity as it happens while keeping discussions, tasks, and project movement inside an organized academic flow.")</p>
+                </article>
 
-      <section id="screenshots" class="screenshots">
-        <div class="shell">
-          <div class="section-heading">
-            <h2>Screenshots</h2>
-            <p>Replace these placeholders with exported screenshots from the running Visual Studio project before submission.</p>
-          </div>
-          <div class="screenshot-grid">
-            <article class="screenshot-card">
-              <div class="placeholder"><span>Dashboard screenshot</span></div>
-              <h3>Dashboard overview</h3>
-              <p>Show the main workspace after login.</p>
-            </article>
-            <article class="screenshot-card">
-              <div class="placeholder"><span>Topics screenshot</span></div>
-              <h3>Topic management</h3>
-              <p>Show topic selection or professor topic batches.</p>
-            </article>
-            <article class="screenshot-card">
-              <div class="placeholder"><span>Tasks screenshot</span></div>
-              <h3>Tasks and submissions</h3>
-              <p>Show course tasks, submitted work, or review screens.</p>
-            </article>
-          </div>
-        </div>
-      </section>
+                <article class="feature-spotlight">
+                    <span class="feature-spotlight__kicker">@T.T("Project planning")</span>
+                    <h3>@T.T("From topic selection to task management")</h3>
+                    <p>@T.T("Move from choosing project directions to assigning and managing work with better visibility and less confusion.")</p>
+                </article>
 
-      <section class="shell">
-        <div class="notice">
-          <div>
-            <h2>Static Vercel Demo</h2>
-            <p>
-              This deployment is intentionally a presentation page only. It does not run the ASP.NET Core backend,
-              database, authentication, SignalR hub, or server-side project logic on Vercel.
-            </p>
-          </div>
-          <a class="button" href="https://github.com/ejonashala/RealTimeCollaborationSystem" target="_blank" rel="noopener noreferrer">Open Repository</a>
-        </div>
-      </section>
-    </main>
+                <article class="feature-spotlight feature-spotlight--expanded">
+                    <span class="feature-spotlight__kicker">@T.T("Evaluation and progress")</span>
+                    <h3>@T.T("Track quizzes, milestones, and outcomes clearly")</h3>
+                    <p>@T.T("Keep academic progress easy to monitor with structured checkpoints, quizzes, and readable progress signals.")</p>
+                </article>
 
-    <footer class="shell">
-      <p>Real Time Collaboration System - university submission demo page.</p>
-    </footer>
-  </div>
-</body>
-</html>
+                <article class="feature-spotlight feature-spotlight--accent">
+                    <span class="feature-spotlight__kicker">@T.T("Role-aware workflow")</span>
+                    <h3>@T.T("Built for students and professors together")</h3>
+                    <p>@T.T("Role-based access, clearer responsibilities, and professor-student interaction make the platform feel more intentional and easier to use.")</p>
+                </article>
+            </div>
+
+            <div class="feature-support" aria-label="Additional platform capabilities">
+                <span>@T.T("Topic selection")</span>
+                <span>@T.T("Task ownership")</span>
+                <span>@T.T("Teamwork spaces")</span>
+                <span>@T.T("Professor interaction")</span>
+                <span>@T.T("Live notifications")</span>
+                <span>@T.T("Progress tracking")</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-block" id="workflow">
+        <div class="home-shell">
+            <div class="section-heading section-heading--centered">
+                <span class="section-kicker">@T.T("How it works")</span>
+                <h2>@T.T("A clear path from account creation to live academic coordination.")</h2>
+                <p>@T.T("The workflow stays simple and readable so users understand the platform quickly and move into meaningful work without friction.")</p>
+            </div>
+
+            <ol class="journey-grid">
+                <li class="journey-step">
+                    <span class="journey-step__number">01</span>
+                    <h3>@T.T("Create an account")</h3>
+                    <p>@T.T("Students and professors enter through a straightforward account setup experience.")</p>
+                </li>
+                <li class="journey-step">
+                    <span class="journey-step__number">02</span>
+                    <h3>@T.T("Enter with the right role")</h3>
+                    <p>@T.T("Each user lands in a role-aware environment shaped around academic responsibilities.")</p>
+                </li>
+                <li class="journey-step">
+                    <span class="journey-step__number">03</span>
+                    <h3>@T.T("Manage or join academic work")</h3>
+                    <p>@T.T("Start projects, choose topics, form groups, and organize the work that needs to happen.")</p>
+                </li>
+                <li class="journey-step">
+                    <span class="journey-step__number">04</span>
+                    <h3>@T.T("Collaborate in real time")</h3>
+                    <p>@T.T("Keep communication, tasks, decisions, and guidance moving inside one shared space.")</p>
+                </li>
+                <li class="journey-step">
+                    <span class="journey-step__number">05</span>
+                    <h3>@T.T("Follow progress and evaluation")</h3>
+                    <p>@T.T("Track quizzes, milestones, and updates so momentum stays visible and manageable.")</p>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="section-block section-block--benefits" id="benefits">
+        <div class="home-shell benefits-layout">
+            <div class="benefits-copy">
+                <span class="section-kicker">@T.T("Why CollabSpace")</span>
+                <h2>@T.T("A more organized academic environment leads to better coordination and fewer lost details.")</h2>
+                <p>@T.T("CollabSpace is valuable because it makes academic collaboration easier to understand, easier to manage, and easier to keep moving.")</p>
+
+                <div class="benefits-points">
+                    <div class="benefits-points__item">
+                        <strong>@T.T("Centralized collaboration")</strong>
+                        <p>@T.T("Project work, communication, feedback, and progress stay connected instead of scattered across separate tools.")</p>
+                    </div>
+                    <div class="benefits-points__item">
+                        <strong>@T.T("Clearer structure")</strong>
+                        <p>@T.T("Students and professors can see responsibilities, progress, and next steps with much less ambiguity.")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="benefits-showcase">
+                <div class="benefits-showcase__header">
+                    <span class="benefit-stat__label">@T.T("Platform value")</span>
+                    <h3>@T.T("Why teams work better with a shared academic system")</h3>
+                </div>
+
+                <div class="benefit-rail">
+                    <article class="benefit-rail__item">
+                        <span class="benefit-rail__number">01</span>
+                        <div>
+                            <h4>@T.T("Better organization across the full workflow")</h4>
+                            <p>@T.T("From topic selection to task completion, the platform keeps academic work connected in one clear path.")</p>
+                        </div>
+                    </article>
+
+                    <article class="benefit-rail__item">
+                        <span class="benefit-rail__number">02</span>
+                        <div>
+                            <h4>@T.T("Faster communication with less friction")</h4>
+                            <p>@T.T("Professor-student interaction and live notifications make it easier to respond at the right time.")</p>
+                        </div>
+                    </article>
+
+                    <article class="benefit-rail__item">
+                        <span class="benefit-rail__number">03</span>
+                        <div>
+                            <h4>@T.T("Clearer progress and more efficient management")</h4>
+                            <p>@T.T("Tasks, quizzes, milestones, and live updates help teams stay aligned without extra overhead.")</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-block section-block--cta">
+        <div class="home-shell">
+            <div class="cta-panel">
+                <div class="cta-copy">
+                    <span class="section-kicker">@T.T("Get started")</span>
+                    <h2>@T.T("Bring structure, live coordination, and academic clarity into one premium platform.")</h2>
+                    <p>@T.T("Sign in to continue your work or create an account to start using CollabSpace with your students, professors, and teams.")</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
